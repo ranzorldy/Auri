@@ -1,0 +1,102 @@
+@import url('https://fonts.googleapis.com/css2?family=Bitcount+Prop+Single:wght@100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bitcount+Prop+Single:wght@100..900&display=swap');
+@import "tailwindcss";
+
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  /* Rainbow gradient colors (hex) */
+  --color-1: #22d3ee;
+  --color-2: #a78bfa;
+  --color-3: #60a5fa;
+  --color-4: #34d399;
+  --color-5: #f59e0b;
+ 
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: 'JetBrains Mono', var(--font-geist-mono);
+  --font-bitcount: 'Bitcount Prop Single', var(--font-bitcount);
+  --animate-aurora: aurora 8s ease-in-out infinite alternate;
+ 
+  @keyframes aurora {
+    0% {
+      background-position: 0% 50%;
+      transform: rotate(-5deg) scale(0.9);
+    }
+    25% {
+      background-position: 50% 100%;
+      transform: rotate(5deg) scale(1.1);
+    }
+    50% {
+      background-position: 100% 50%;
+      transform: rotate(-3deg) scale(0.95);
+    }
+    75% {
+      background-position: 50% 0%;
+      transform: rotate(3deg) scale(1.05);
+    }
+    100% {
+      background-position: 0% 50%;
+      transform: rotate(-5deg) scale(0.9);
+    }
+  }
+
+  --animate-rainbow: rainbow var(--speed, 2s) infinite linear;
+ 
+  @keyframes rainbow {
+    0% {
+      background-position: 0%;
+    }
+    100% {
+      background-position: 200%;
+    }
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+/* Shared utility to avoid in-component @import for FAQ/Headings */
+.font-bitcount-prop {
+  font-family: 'Bitcount Prop Single', sans-serif;
+}
+
+/* Performance utilities */
+.cv-auto { content-visibility: auto; contain-intrinsic-size: 1200px 800px; }
+.contain-paint { contain: paint; }
+.gpu { transform: translateZ(0); will-change: transform; }
+.gpu-opacity { will-change: transform, opacity; }
+
+/* Explicit class used by RainbowButton */
+.animate-rainbow {
+  animation: rainbow 8s linear infinite;
+}
+
+/* Hide scrollbars utility for scrollable help page */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+/* Typography utilities */
+.font-jetbrains-mono {
+  font-family: 'JetBrains Mono', var(--font-geist-mono), monospace;
+}
