@@ -1,5 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Bitcount+Prop+Single:wght@100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Bitcount+Prop+Single:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
 @import "tailwindcss";
 
 
@@ -20,7 +19,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: 'JetBrains Mono', var(--font-geist-mono);
-  --font-bitcount: 'Bitcount Prop Single', var(--font-bitcount);
+  --font-bitcount: 'Bitcount Prop Single', system-ui, sans-serif;
   --animate-aurora: aurora 8s ease-in-out infinite alternate;
  
   @keyframes aurora {

@@ -5,7 +5,6 @@ import { Play, Wallet, ShieldCheck, Send, Vault, X } from "lucide-react"
 import { motion, type MotionValue, AnimatePresence } from "motion/react"
 import { cn } from "@/lib/utils"
 import * as React from "react"
-import Silk from "@/components/backgrounds/Silk"
 import MountOnView from "@/components/MountOnView"
 
 // Animation variants for container and cards
@@ -40,10 +39,7 @@ const steps: Step[] = [
     subtitle: "Connect using Web3Auth ",
     description: "Get easily connected to your wallet with Web3Auth, and start using the dapp.",
     icon: Wallet,
-    videoSrcs: [
-      "/connect.mp4",
-      "/connect-auri-1756237053649.mp4",
-    ],
+    videoSrcs: ["/connect-auri-1756237053649.mp4"],
     poster: "/solana.jpg",
   },
   {
@@ -68,7 +64,7 @@ const steps: Step[] = [
   },
 ]
 
-function StepCard({ step, index, isActive, onOpen, onHoverActivate, onVisibleRatio, modalOpen }: { step: Step; index: number; isActive: boolean; onOpen: (s: Step) => void; onHoverActivate: (idx: number) => void; onVisibleRatio: (idx: number, ratio: number) => void; modalOpen: boolean }) {
+const StepCard = React.memo(function StepCard({ step, index, isActive, visible, onOpen, onHoverActivate, onVisibleRatio, modalOpen }: { step: Step; index: number; isActive: boolean; visible: boolean; onOpen: (s: Step) => void; onHoverActivate: (idx: number) => void; onVisibleRatio: (idx: number, ratio: number) => void; modalOpen: boolean }) {
   const { title, subtitle, description, icon: Icon } = step
   const containerRef = React.useRef<HTMLDivElement | null>(null)
   const videoRef = React.useRef<HTMLVideoElement | null>(null)
@@ -77,16 +73,21 @@ function StepCard({ step, index, isActive, onOpen, onHoverActivate, onVisibleRat
     const container = containerRef.current
     if (!container) return
 
+    let rafId: number | null = null
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0]
-        onVisibleRatio(index, entry.intersectionRatio)
+        if (rafId) cancelAnimationFrame(rafId)
+        rafId = requestAnimationFrame(() => onVisibleRatio(index, entry.intersectionRatio))
       },
       { threshold: [0, 0.25, 0.5, 0.75, 1] }
     )
 
     observer.observe(container)
-    return () => observer.disconnect()
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId)
+      observer.disconnect()
+    }
   }, [])
 
   React.useEffect(() => {
@@ -144,41 +145,22 @@ function StepCard({ step, index, isActive, onOpen, onHoverActivate, onVisibleRat
               onHoverStart={() => onHoverActivate(index)}
               onHoverEnd={() => onHoverActivate(-1)}
             >
-              {step.videoSrcs?.length ? (
-                isActive && !modalOpen ? (
-                  <video
-                    ref={videoRef}
-                    className="absolute inset-0 h-full w-full object-cover pointer-events-none"
-                    playsInline
-                    muted
-                    loop
-                    autoPlay
-                    preload="metadata"
-                    controls={false}
-                    controlsList="nodownload nofullscreen noplaybackrate"
-                    disablePictureInPicture
-                    poster={step.poster}
-                  >
-                    {step.videoSrcs.map((src) => (
-                      <source key={src} src={src} type="video/mp4" />
-                    ))}
-                  </video>
-                ) : (
-                  <video
-                    className="absolute inset-0 h-full w-full object-cover pointer-events-none"
-                    playsInline
-                    muted
-                    preload="metadata"
-                    controls={false}
-                    controlsList="nodownload nofullscreen noplaybackrate"
-                    disablePictureInPicture
-                    poster={step.poster}
-                  >
-                    {step.videoSrcs.map((src) => (
-                      <source key={src} src={src} type="video/mp4" />
-                    ))}
-                  </video>
-                )
+              {step.poster ? (
+                <>
+                  <img
+                    alt={step.title}
+                    className="absolute inset-0 h-full w-full object-cover"
+                    src={step.poster}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <div className="absolute inset-0 grid place-items-center bg-black/20">
+                    <span className="inline-flex items-center gap-2 rounded-full bg-black/50 px-3 py-1.5 text-white/90 text-xs ring-1 ring-white/10">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5"><path d="M8.75 5.75a.75.75 0 011.13-.65l8 5.25a.75.75 0 010 1.26l-8 5.25a.75.75 0 01-1.13-.65V5.75z" /></svg>
+                      Tap to preview
+                    </span>
+                  </div>
+                </>
               ) : (
                 <span className="grid h-full w-full place-items-center text-xs text-zinc-500">Preview coming soon</span>
               )}
@@ -195,12 +177,13 @@ function StepCard({ step, index, isActive, onOpen, onHoverActivate, onVisibleRat
       </div>
     </motion.article>
   )
-}
+})
 
 export default function HowItWorks({ fullBleed = false, contentScale = 1 }: HowItWorksProps) {
   const [selected, setSelected] = React.useState<Step | null>(null)
   const [activeIndex, setActiveIndex] = React.useState<number>(0)
   const visibleRatiosRef = React.useRef<number[]>(steps.map(() => 0))
+  const [visibleMap, setVisibleMap] = React.useState<Record<number, boolean>>({})
 
   React.useEffect(() => {
     if (typeof document === "undefined") return
@@ -216,12 +199,10 @@ export default function HowItWorks({ fullBleed = false, contentScale = 1 }: HowI
 
   return (
     <div className=" p-2 m-2 rounded-3xl border border-gray-600 min-h-[calc(100vh-1rem)] h-full  bg-black relative overflow-hidden cv-auto contain-paint">
-      {/* Background silk - keep static, dark grey tone */}
-      <MountOnView className="absolute inset-0 z-0 pointer-events-none gpu-opacity">
-        <div className="absolute inset-0 h-full w-full">
-          <Silk color="#1a1a1d" speed={3} noiseIntensity={0.6} scale={1} />
-        </div>
-      </MountOnView>
+      {/* Background gradient (replaces Silk) */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 h-full w-full bg-[radial-gradient(120%_80%_at_50%_55%,rgba(255,255,255,0.06),transparent_70%)]" />
+      </div>
 
       {/* Local Bitcount font import (removed sheen keyframes) */}
        <style>{``}</style>
@@ -275,6 +256,7 @@ export default function HowItWorks({ fullBleed = false, contentScale = 1 }: HowI
                     }}
                     onVisibleRatio={(i, ratio) => {
                       visibleRatiosRef.current[i] = ratio
+                      setVisibleMap((m) => ({ ...m, [i]: ratio > 0 }));
                       if (!selected) {
                         let best = 0
                         let bestIdx = 0
@@ -288,6 +270,7 @@ export default function HowItWorks({ fullBleed = false, contentScale = 1 }: HowI
                       }
                     }}
                     modalOpen={!!selected}
+                    visible={!!visibleMap[idx]}
                   />
                 ))}
               </div>

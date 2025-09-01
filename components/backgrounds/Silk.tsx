@@ -87,10 +87,12 @@ void main() {
 
 interface SilkPlaneProps {
   uniforms: SilkUniforms;
+  paused?: boolean;
+  fps?: number;
 }
 
 const SilkPlane = forwardRef<Mesh, SilkPlaneProps>(function SilkPlane(
-  { uniforms },
+  { uniforms, paused = false, fps = 30 },
   ref
 ) {
   const { viewport } = useThree();
@@ -107,21 +109,27 @@ const SilkPlane = forwardRef<Mesh, SilkPlaneProps>(function SilkPlane(
 
   const { invalidate } = useThree();
 
-  // Throttle animation to ~30fps to reduce GPU/CPU load
+  // Throttle animation and allow pausing; also provide CSS fallback
   useEffect(() => {
     const mesh = ref as React.MutableRefObject<Mesh | null>;
     let mounted = true;
+    if (paused) {
+      return () => {
+        mounted = false;
+      };
+    }
+    const intervalMs = Math.max(16, Math.floor(1000 / (fps || 30)));
     const interval = setInterval(() => {
       if (!mounted || !mesh.current) return;
       const material = mesh.current.material as ShaderMaterial & { uniforms: SilkUniforms };
-      material.uniforms.uTime.value += 0.0033; // ~0.1 * 1/30s
+      material.uniforms.uTime.value += 0.0033;
       invalidate();
-    }, 33);
+    }, intervalMs);
     return () => {
       mounted = false;
       clearInterval(interval);
     };
-  }, [ref, invalidate]);
+  }, [ref, invalidate, paused, fps]);
 
   return (
     <mesh ref={ref} position={[0, 0, 0]}>
@@ -142,6 +150,8 @@ export interface SilkProps {
   color?: string;
   noiseIntensity?: number;
   rotation?: number;
+  paused?: boolean;
+  fps?: number;
 }
 const Silk: React.FC<SilkProps> = ({
   speed = 5,
@@ -149,6 +159,8 @@ const Silk: React.FC<SilkProps> = ({
   color = "#7B7481",
   noiseIntensity = 1.5,
   rotation = 0,
+  paused = false,
+  fps = 30,
 }) => {
   const meshRef = useRef<Mesh>(null);
 
@@ -172,7 +184,7 @@ const Silk: React.FC<SilkProps> = ({
       shadows={false}
       style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
     >
-      <SilkPlane ref={meshRef} uniforms={uniforms} />
+      <SilkPlane ref={meshRef} uniforms={uniforms} paused={paused} fps={fps} />
     </Canvas>
   );
 };

@@ -218,7 +218,7 @@ function DitheredWaves({
     waveAmplitude: new THREE.Uniform(waveAmplitude),
     waveColor: new THREE.Uniform(new THREE.Color(...waveColor)),
     mousePos: new THREE.Uniform(new THREE.Vector2(0, 0)),
-    enableMouseInteraction: new THREE.Uniform(enableMouseInteraction ? 1 : 0),
+    enableMouseInteraction: new THREE.Uniform(0),
     mouseRadius: new THREE.Uniform(mouseRadius),
   });
 
@@ -251,7 +251,7 @@ function DitheredWaves({
       prevColor.current = [...waveColor];
     }
 
-    u.enableMouseInteraction.value = enableMouseInteraction ? 1 : 0;
+    u.enableMouseInteraction.value = 0;
     u.mouseRadius.value = mouseRadius;
 
     if (enableMouseInteraction) {
@@ -284,15 +284,17 @@ function DitheredWaves({
         <RetroEffect colorNum={colorNum} pixelSize={pixelSize} />
       </EffectComposer>
 
-      <mesh
-        onPointerMove={handlePointerMove}
-        position={[0, 0, 0.01]}
-        scale={[viewport.width, viewport.height, 1]}
-        visible={false}
-      >
-        <planeGeometry args={[1, 1]} />
-        <meshBasicMaterial transparent opacity={0} />
-      </mesh>
+      {enableMouseInteraction && (
+        <mesh
+          onPointerMove={handlePointerMove}
+          position={[0, 0, 0.01]}
+          scale={[viewport.width, viewport.height, 1]}
+          visible={false}
+        >
+          <planeGeometry args={[1, 1]} />
+          <meshBasicMaterial transparent opacity={0} />
+        </mesh>
+      )}
     </>
   );
 }
@@ -317,7 +319,7 @@ export default function Dither({
   colorNum = 4,
   pixelSize = 2,
   disableAnimation = false,
-  enableMouseInteraction = true,
+  enableMouseInteraction = false,
   mouseRadius = 1,
 }: DitherProps) {
   return (

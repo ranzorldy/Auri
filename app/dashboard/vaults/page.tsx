@@ -18,6 +18,8 @@ import { PROGRAM_ID } from "@/lib/constants";
 import { emitToast, Toaster } from "@/components/Toast";
 import RiskDetailsModal from "@/components/RiskDetailsModal";
 import LockdownNoticeModal from "@/components/LockdownNoticeModal";
+import VaultTransferModal from "@/components/VaultTransferModal";
+import VaultDeleteModal from "@/components/VaultDeleteModal";
 
 const statusOptions = ["Lockdown", "Disrupt", "Calm"] as const;
 type VaultStatus = (typeof statusOptions)[number];
@@ -85,6 +87,14 @@ const VaultsPage = () => {
   const [riskError, setRiskError] = useState<string | null>(null);
   const [riskOpen, setRiskOpen] = useState(false);
   const [lockdownOpen, setLockdownOpen] = useState(false);
+  // Transfer ownership state
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [transferBusy, setTransferBusy] = useState(false);
+  const [transferError, setTransferError] = useState<string | null>(null);
+  // Delete (close) modal state
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   // no page-level error banner; modal shows inline errors
 
   const REFRESH_DELAY_MS = 10000; // allow cluster/indexers to catch up
@@ -151,24 +161,30 @@ const VaultsPage = () => {
         }
       }
 
-      const filters = ownerPk
-        ? [{ memcmp: { offset: 8, bytes: ownerPk.toBase58() } }]
-        : undefined;
+      // Only show vaults owned by the connected wallet; if no wallet, show none
+      if (!ownerPk) {
+        setVaults([]);
+        setLastFetchedCount(0);
+        return;
+      }
+
+      const filters = [{ memcmp: { offset: 8 + 32, bytes: ownerPk.toBase58() } }];
       const accounts = await connection.getProgramAccounts(programId, { filters });
       const myVaults: OnChainVault[] = [];
       for (const acct of accounts) {
         // Try to deserialize owner pubkey and skip others
         try {
-          // AuraVault layout: owner(32) + name(string) + bump(u8)
+          // AuraVault layout: creator(32) + owner(32) + name(string) + bump(u8)
           const data = acct.account.data;
-          if (data.length < 8 + 32 + 1) continue; // rough sanity
-          // Anchor accounts start with 8-byte discriminator; owner starts after that
-          const ownerBytes = data.slice(8, 8 + 32);
+          if (data.length < 8 + 32 + 32 + 1) continue; // rough sanity
+          // Anchor accounts start with 8-byte discriminator; fields follow
+          const creatorBytes = data.slice(8, 8 + 32);
+          const ownerBytes = data.slice(8 + 32, 8 + 32 + 32);
           const owner = new PublicKey(ownerBytes);
           if (ownerPk && owner.toBase58() !== ownerPk.toBase58()) continue;
-          // name follows as Rust Anchor string: 4-byte LE length + utf8 bytes
-          const nameLen = new DataView(data.buffer, data.byteOffset + 8 + 32, 4).getUint32(0, true);
-          const nameStart = 8 + 32 + 4;
+          // name follows as Rust Anchor string: 4-byte LE length + utf8 bytes after creator+owner
+          const nameLen = new DataView(data.buffer, data.byteOffset + 8 + 32 + 32, 4).getUint32(0, true);
+          const nameStart = 8 + 32 + 32 + 4;
           const nameEnd = nameStart + nameLen;
           if (nameEnd <= data.length) {
             const name = new TextDecoder().decode(data.slice(nameStart, nameEnd));
@@ -338,6 +354,78 @@ const VaultsPage = () => {
       setSubmitBusy(false);
     }
   }, [connection, activeVault, address, accounts, web3auth, refreshVaults]);
+
+  const handleTransferOwnership = useCallback(async (newOwnerStr: string): Promise<boolean> => {
+    if (!connection || !activeVault) return false;
+    const ownerStr = address || accounts?.[0] || null;
+    if (!ownerStr) return false;
+    let ok = false;
+    try {
+      setTransferBusy(true);
+      setTransferError(null);
+      const ownerPk = new PublicKey(ownerStr);
+      const newOwnerPk = new PublicKey(newOwnerStr.trim());
+      const logSendError = async (error: any) => {
+        try {
+          if (error && typeof (error as any).getLogs === "function") {
+            let logs: any = null;
+            try { logs = await (error as any).getLogs(); } catch { try { logs = await (error as any).getLogs(connection); } catch {} }
+            console.log("[Vaults] transfer getLogs()", logs);
+          } else if (error && (error as any).logs) {
+            console.log("[Vaults] transfer error logs", (error as any).logs);
+          }
+        } catch {}
+      };
+      // Try Anchor first via SolanaWallet
+      try {
+        const mod = await import("@web3auth/solana-provider");
+        const solanaWallet = new (mod as any).SolanaWallet((web3auth as any)?.provider);
+        const { program, wallet } = await getProviderAndProgramFromSolanaWallet(solanaWallet, connection);
+        const owner = wallet.publicKey;
+        const sig = await (program as any).methods
+          .transferOwnership(activeVault.name, newOwnerPk)
+          .accounts({
+            vault: new PublicKey(activeVault.pubkey),
+            owner,
+          })
+          .rpc();
+        emitToast(`Transferred ownership of ${activeVault.name}`, "success");
+        setVaults((prev) => (prev ? prev.filter((v) => v.pubkey !== activeVault.pubkey) : prev));
+        setActiveVault(null);
+        watchAndRefresh(activeVault.pubkey);
+        await refreshAfterTx(sig);
+        ok = true;
+      } catch (e) {
+        await logSendError(e);
+        // Fallback to manual instruction
+        const disc = await computeDiscriminator("transfer_ownership");
+        const nameBytes = new TextEncoder().encode(activeVault.name);
+        const nameLen = new Uint8Array(new Uint32Array([nameBytes.length]).buffer);
+        const data = new Uint8Array([...disc, ...new Uint8Array(nameLen), ...nameBytes, ...newOwnerPk.toBytes()]);
+        const { Transaction } = await import("@solana/web3.js");
+        const keys = [
+          { pubkey: new PublicKey(activeVault.pubkey), isSigner: false, isWritable: true },
+          { pubkey: ownerPk, isSigner: true, isWritable: false },
+        ];
+        const tx = new Transaction().add({ keys, programId: PROGRAM_ID, data } as any);
+        tx.feePayer = ownerPk;
+        const { blockhash } = await connection.getLatestBlockhash({ commitment: "finalized" });
+        tx.recentBlockhash = blockhash;
+        const sig = await signAndSendTransaction(tx);
+        emitToast(`Transferred ownership of ${activeVault.name}`, "success");
+        setVaults((prev) => (prev ? prev.filter((v) => v.pubkey !== activeVault.pubkey) : prev));
+        setActiveVault(null);
+        watchAndRefresh(activeVault.pubkey);
+        await refreshAfterTx(sig);
+        ok = true;
+      }
+    } catch (e: any) {
+      setTransferError(e?.message ?? "Transfer failed");
+    } finally {
+      setTransferBusy(false);
+    }
+    return ok;
+  }, [connection, activeVault, address, accounts, web3auth, refreshAfterTx, watchAndRefresh, signAndSendTransaction]);
 
   async function computeDiscriminator(ixName: string): Promise<Uint8Array> {
     const te = new TextEncoder();
@@ -824,6 +912,15 @@ const VaultsPage = () => {
                             >
                               Stake
                             </button>
+                            <button
+                              onClick={() => { setActiveVault(vault); setTransferError(null); setTransferOpen(true); }}
+                              className="h-7 px-2 inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-[11px]"
+                              title="Transfer ownership"
+                              aria-label="Transfer ownership"
+                              style={{ fontFamily: '"JetBrains Mono", monospace' }}
+                            >
+                              Transfer
+                            </button>
                           </div>
                         </div>
                         <div className="mt-3 flex items-center justify-between">
@@ -835,7 +932,7 @@ const VaultsPage = () => {
                             <button aria-label="Withdraw" disabled={riskLoading} onClick={() => { if (riskData?.lock) { setLockdownOpen(true); return; } setActiveVault(vault); setFlowError(null); setWithdrawOpen(true); setDepositOpen(false); }} className="size-7 inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800">
                               <IconArrowUpRight className="h-3.5 w-3.5" />
                             </button>
-                            <button aria-label="Close" onClick={() => handleCloseVault(vault)} className="size-7 inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-red-50 dark:hover:bg-red-950/30">
+                            <button aria-label="Close" onClick={() => { setActiveVault(vault); setDeleteError(null); setDeleteOpen(true); }} className="size-7 inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-red-50 dark:hover:bg-red-950/30">
                               <IconTrash className="h-3.5 w-3.5" />
                             </button>
                           </div>
@@ -944,6 +1041,9 @@ const VaultsPage = () => {
                           <button aria-label="Stake" onClick={() => setComingSoonOpen({ name: vault.name })} className="h-7 px-2 inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-[11px]" style={{ fontFamily: '"JetBrains Mono", monospace' }}>
                             Stake
                           </button>
+                          <button aria-label="Transfer ownership" onClick={() => { setActiveVault(vault); setTransferError(null); setTransferOpen(true); }} className="h-7 px-2 inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-[11px]" style={{ fontFamily: '"JetBrains Mono", monospace' }}>
+                            Transfer
+                          </button>
                         </div>
                         <button aria-label="Deposit" disabled={riskLoading} onClick={() => { if (riskData?.lock) { setLockdownOpen(true); return; } setActiveVault(vault); setFlowError(null); setDepositOpen(true); setWithdrawOpen(false); }} className="size-7 inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800">
                           <IconArrowDownRight className="h-3.5 w-3.5" />
@@ -951,7 +1051,7 @@ const VaultsPage = () => {
                         <button aria-label="Withdraw" disabled={riskLoading} onClick={() => { if (riskData?.lock) { setLockdownOpen(true); return; } setActiveVault(vault); setFlowError(null); setWithdrawOpen(true); setDepositOpen(false); }} className="size-7 inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800">
                           <IconArrowUpRight className="h-3.5 w-3.5" />
                         </button>
-                        <button aria-label="Close" onClick={() => handleCloseVault(vault)} className="size-7 inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-red-50 dark:hover:bg-red-950/30">
+                        <button aria-label="Close" onClick={() => { setActiveVault(vault); setDeleteError(null); setDeleteOpen(true); }} className="size-7 inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-red-50 dark:hover:bg-red-950/30">
                           <IconTrash className="h-3.5 w-3.5" />
                         </button>
                       </div>
@@ -1035,6 +1135,38 @@ const VaultsPage = () => {
         busy={submitBusy}
         onClose={() => { setWithdrawOpen(false); setActiveVault(null); }}
         onSubmit={async (amt) => { await handleWithdraw(amt); setWithdrawOpen(false); setActiveVault(null); }}
+      />
+      <VaultTransferModal
+        open={Boolean(activeVault) && transferOpen}
+        vaultName={activeVault?.name ?? ""}
+        vaultAddress={activeVault?.pubkey}
+        error={transferError}
+        busy={transferBusy}
+        onClose={() => { setTransferOpen(false); setActiveVault(null); }}
+        onSubmit={async (addr) => { const success = await handleTransferOwnership(addr); if (success) { setTransferOpen(false); setActiveVault(null); } }}
+      />
+      <VaultDeleteModal
+        open={Boolean(activeVault) && deleteOpen}
+        vaultName={activeVault?.name ?? ""}
+        vaultAddress={activeVault?.pubkey}
+        vaultLamports={activeVault?.lamports ?? null}
+        error={deleteError}
+        busy={deleteBusy}
+        onClose={() => { setDeleteOpen(false); setActiveVault(null); setDeleteError(null); }}
+        onConfirm={async () => {
+          if (!activeVault) return;
+          try {
+            setDeleteBusy(true);
+            setDeleteError(null);
+            await handleCloseVault(activeVault);
+            setDeleteOpen(false);
+            setActiveVault(null);
+          } catch (e: any) {
+            setDeleteError(e?.message ?? 'Failed to close vault');
+          } finally {
+            setDeleteBusy(false);
+          }
+        }}
       />
       <Toaster />
       <VaultGoalModal
