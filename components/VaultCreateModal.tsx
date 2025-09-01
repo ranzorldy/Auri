@@ -94,8 +94,8 @@ export default function VaultCreateModal({ open, onClose, onCreate }: VaultCreat
             )}
           </CardContent>
           <CardFooter className="flex gap-2 justify-end">
-            <Button variant="outline" onClick={onClose}>Cancel</Button>
-            <Button
+            <Button variant="muted" onClick={onClose} className="transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300">Cancel</Button>
+            <Button variant="muted"
               onClick={async () => {
                 const cleanName = name.trim();
                 const amtStr = amount.trim();

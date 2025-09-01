@@ -71,8 +71,8 @@ export default function VaultDeleteModal({ open, vaultName, vaultAddress, vaultL
                 )}
               </CardContent>
               <CardFooter className="flex gap-2 justify-end">
-                <Button variant="outline" onClick={onClose}>Cancel</Button>
-                <Button onClick={() => onConfirm()} disabled={busy} className="bg-red-600 hover:bg-red-700 text-white dark:text-white">
+                <Button variant="muted" onClick={onClose} className="transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300">Cancel</Button>
+                <Button variant="muted" onClick={() => onConfirm()} disabled={busy} className="transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300">
                   {busy ? "Closing..." : "Close vault"}
                 </Button>
               </CardFooter>

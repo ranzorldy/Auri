@@ -89,8 +89,8 @@ export default function VaultTransferModal({ open, vaultName, vaultAddress, onSu
                 )}
               </CardContent>
               <CardFooter className="flex gap-2 justify-end">
-                <Button variant="outline" onClick={onClose}>Cancel</Button>
-                <Button onClick={() => onSubmit(address)} disabled={busy || !parsed.ok}>
+                <Button variant="outline" onClick={onClose} className="transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300">Cancel</Button>
+                <Button onClick={() => onSubmit(address)} disabled={busy || !parsed.ok} className="transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300">
                   {busy ? "Transferring..." : "Transfer"}
                 </Button>
               </CardFooter>

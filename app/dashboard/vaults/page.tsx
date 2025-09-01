@@ -709,17 +709,17 @@ const VaultsPage = () => {
   }, [connection, vaults, refreshVaults]);
 
   return (
-    <div className="flex w-full h-full bg-white border-neutral-200 dark:bg-neutral-950">
+    <div className="flex w-full h-full bg-neutral-950">
       {/* Main content */}
       <div className="flex-1 flex p-0 md:p-4">
         <div className="flex flex-col w-full ">
           <div className="flex-1 overflow-y-auto no-scrollbar">
             {/* Sticky header */}
-            <div className="sticky top-0 z-10 bg-white/80 dark:bg-neutral-950/80 backdrop-blur supports-[backdrop-filter]:backdrop-blur border-b border-neutral-200 dark:border-neutral-800 py-3 md:-ml-4 md:-mr-4">
+            <div className="sticky top-0 z-10 bg-neutral-950/90 backdrop-blur supports-[backdrop-filter]:backdrop-blur border-b border-neutral-800 py-3 md:-ml-4 md:-mr-4">
               <div className="px-4 flex flex-col gap-2">
                 <div className="flex items-center justify-between gap-3">
                   <h1
-                    className="text-2xl"
+                    className="text-2xl text-neutral-200"
                     style={{ fontFamily: '"Bitcount Prop Single", sans-serif' }}
                   >
                     Vaults
@@ -727,48 +727,48 @@ const VaultsPage = () => {
                   <div className="flex items-center gap-2">
                     <Button
                       size="sm"
+                      variant="muted"
                       onClick={() => setCreating(true)}
                       disabled={!canUseChain}
                       title="Create a new vault"
+                      className="transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300"
                     >
                       <IconPlus className="size-4" />
                       New
                     </Button>
                     <Button
                       size="sm"
-                      variant="ghost"
+                      variant="muted"
                       onClick={() => refreshVaults()}
                       disabled={!connection}
                       title="Refresh vault list"
+                      className="transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300"
                     >
                       <IconRefresh className="size-4" />
                       Refresh
                     </Button>
                     <Button
                       size="sm"
-                      variant="ghost"
+                      variant="muted"
                       onClick={analyzeRisk}
                       disabled={!canUseChain || riskLoading || cooldownMs > 0}
                       title={cooldownMs > 0 ? `Wait ${Math.ceil(cooldownMs/1000)}s` : 'Analyze wallet risk'}
+                      className="transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300"
                     >
                       <IconShieldCheck className="size-4" />
                       {riskLoading ? 'Analyzing…' : cooldownMs > 0 ? `Analyze (${Math.ceil(cooldownMs/1000)}s)` : 'Analyze risk'}
                     </Button>
                     <Button
                       size="sm"
-                      variant="ghost"
+                      variant="muted"
                       onClick={simulateLockdown}
                       title="Simulate a lockdown state (no network calls)"
+                      className="transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300"
                     >
                       <IconAlertTriangle className="size-4" />
                       Lockdown
                     </Button>
-                    {!address && (
-                      <Button size="sm" onClick={() => login()} title="Connect wallet">
-                        <IconPlugConnected className="size-4" />
-                        Connect
-                      </Button>
-                    )}
+                   
                     {/* State representation */}
                     {(() => {
                       const state = (riskData?.lock ? 'Lockdown' : 'Calm') as VaultStatus;
@@ -783,41 +783,27 @@ const VaultsPage = () => {
                       return (
                         <div className="hidden md:flex items-center gap-2">
                           <button
-                            className={`${pillBase} ${pillClasses}`}
+                            className={`${pillBase} ${pillClasses} bg-neutral-900/60 border-neutral-800 text-neutral-300 transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300`}
                             style={{ fontFamily: '"JetBrains Mono", monospace' }}
-                            title={riskError ?? (riskLoading ? 'Analyzing risk…' : (riskData?.lock ? 'High-risk tokens detected' : 'Stable'))}
+                            title={riskError ?? (riskData?.lock ? 'High-risk tokens detected' : 'Stable')}
                             onClick={() => setRiskOpen(true)}
                             aria-label="Open risk details"
                           >
-                            {isLoading ? (
-                              <IconActivity className="h-3.5 w-3.5" />
-                            ) : isError ? (
+                            {isError ? (
                               <IconAlertTriangle className="h-3.5 w-3.5" />
                             ) : state === 'Lockdown' ? (
                               <IconAlertTriangle className="h-3.5 w-3.5" />
                             ) : (
                               <IconShieldCheck className="h-3.5 w-3.5" />
                             )}
-                            <span className={`h-1.5 w-1.5 rounded-full ${isLoading ? 'bg-yellow-500 animate-pulse' : isError ? 'bg-red-500' : statusStyles[state].dot}`} />
-                            <span>{isLoading ? 'Analyzing' : isError ? 'Error' : state}</span>
-                          </button>
-                          <button
-                            onClick={() => setRiskOpen(true)}
-                            title="State details"
-                            className="group flex items-center"
-                            aria-label="Open risk details"
-                          >
-                            <div className="flex w-28 h-1.5 rounded-full bg-neutral-200/70 dark:bg-neutral-800/70 overflow-hidden">
-                              <div className={`w-1/2 ${state === 'Lockdown' ? 'bg-red-500' : 'bg-transparent'} group-hover:bg-red-400 transition-colors`} />
-                              <div className={`w-1/2 ${state === 'Calm' ? 'bg-green-500' : 'bg-transparent'} group-hover:bg-green-400 transition-colors`} />
-                            </div>
+                            <span>{isError ? 'Error' : state}</span>
                           </button>
                         </div>
                       );
                     })()}
                   </div>
                 </div>
-                <div className="text-sm text-neutral-700 dark:text-neutral-300" style={{ fontFamily: '"JetBrains Mono", monospace' }}>
+                <div className="text-sm text-neutral-400" style={{ fontFamily: '"JetBrains Mono", monospace' }}>
                   Vaults are on-chain accounts you control to deposit SOL, set goals, and manage balances securely.
                 </div>
                 <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2">
@@ -826,7 +812,7 @@ const VaultsPage = () => {
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
                       placeholder="Search by name or address"
-                      className="h-9 w-full rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 px-3 text-sm outline-none focus:ring-2 focus:ring-neutral-300 dark:focus:ring-neutral-700"
+                      className="h-9 w-full rounded-md border border-neutral-800 bg-neutral-900 text-neutral-200 placeholder:text-neutral-500 px-3 text-sm outline-none focus:ring-2 focus:ring-neutral-800"
                       style={{ fontFamily: '"JetBrains Mono", monospace' }}
                     />
                   </div>
@@ -834,30 +820,30 @@ const VaultsPage = () => {
                     <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value as any)}
-                      className="h-9 rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 px-2 text-sm outline-none focus:ring-2 focus:ring-neutral-300 dark:focus:ring-neutral-700"
+                      className="h-9 rounded-md border border-neutral-800 bg-neutral-900 text-neutral-200 px-2 text-sm outline-none focus:ring-2 focus:ring-neutral-800"
                       style={{ fontFamily: '"JetBrains Mono", monospace' }}
                     >
                       <option value="balance_desc">Sort: Balance</option>
                       <option value="name_asc">Sort: Name</option>
                       <option value="recent">Sort: Recent</option>
                     </select>
-                    <div className="inline-flex rounded-md border border-neutral-200 dark:border-neutral-800 overflow-hidden">
-                      <button
-                        className={`h-9 w-10 inline-flex items-center justify-center ${view === 'grid' ? 'bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100' : 'text-neutral-600 dark:text-neutral-400'}`}
-                        onClick={() => setView('grid')}
-                        title="Grid view"
-                      >
+                    <div className="inline-flex rounded-md border border-neutral-800 overflow-hidden bg-neutral-900">
+                                              <button
+                          className={`h-9 w-10 inline-flex items-center justify-center ${view === 'grid' ? 'bg-neutral-800 text-neutral-100' : 'text-neutral-500'}`}
+                          onClick={() => setView('grid')}
+                          title="Grid view"
+                        >
                         <IconLayoutGrid className="h-4 w-4" />
                       </button>
-                      <button
-                        className={`h-9 w-10 inline-flex items-center justify-center ${view === 'list' ? 'bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100' : 'text-neutral-600 dark:text-neutral-400'}`}
-                        onClick={() => setView('list')}
-                        title="List view"
-                      >
+                                              <button
+                          className={`h-9 w-10 inline-flex items-center justify-center ${view === 'list' ? 'bg-neutral-800 text-neutral-100' : 'text-neutral-500'}`}
+                          onClick={() => setView('list')}
+                          title="List view"
+                        >
                         <IconLayoutList className="h-4 w-4" />
                       </button>
                     </div>
-                    <div className="hidden sm:flex items-center gap-2 text-[11px] text-neutral-600 dark:text-neutral-400 px-2">
+                    <div className="hidden sm:flex items-center gap-2 text-[11px] text-neutral-500 px-2">
                       <span style={{ fontFamily: '"JetBrains Mono", monospace' }}>Vaults: {filteredAndSortedVaults ? `${filteredAndSortedVaults.length}${vaults && filteredAndSortedVaults.length !== vaults.length ? `/${vaults.length}` : ''}` : (lastFetchedCount ?? 0)}</span>
                       <span className="inline-block h-1 w-1 rounded-full bg-neutral-400" />
                       <span style={{ fontFamily: '"JetBrains Mono", monospace' }}>Total: {(filteredAndSortedVaults ? totalFilteredSol : totalAllSol).toFixed(4)} SOL</span>
@@ -868,17 +854,17 @@ const VaultsPage = () => {
             </div>
 
             {/* Scrollable list */}
-            <div className="flex flex-col gap-2 p-4">
-              {closing && (
-                <div className="rounded-md border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-3 py-2 text-[12px] text-neutral-700 dark:text-neutral-300" style={{ fontFamily: '"JetBrains Mono", monospace' }}>
-                  Closing vault "{closing.name}" …
-                </div>
-              )}
+            <div className="flex flex-col gap-2 p-4 bg-neutral-950">
+                              {closing && (
+                  <div className="rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-[12px] text-neutral-300" style={{ fontFamily: '"JetBrains Mono", monospace' }}>
+                    Closing vault "{closing.name}" …
+                  </div>
+                )}
               
               
               {/* Grid view */}
               {view === 'grid' && filteredAndSortedVaults && filteredAndSortedVaults.length > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                   {filteredAndSortedVaults.map((vault, index) => {
                     const styles = statusStyles["Calm"];
                     const solAmount = (vault.lamports / LAMPORTS_PER_SOL).toFixed(4);
@@ -888,56 +874,47 @@ const VaultsPage = () => {
                     return (
                       <motion.div
                         key={vault.pubkey}
-                        className="group rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 hover:shadow-sm transition-shadow"
+                        className="group rounded-lg border border-neutral-800 bg-neutral-900 p-4 transition-shadow hover:bg-neutral-800/40"
                         initial={{ opacity: 0, y: 16 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true, amount: 0.4 }}
                         transition={{ duration: 0.35, ease: 'easeOut', delay: (index % 6) * 0.03 }}
                       >
-                        <div className="flex items-start gap-3">
-                          <Avatar className="size-8 hidden sm:flex">
-                            <AvatarFallback style={{ fontFamily: '"Bitcount Prop Single", sans-serif' }} className="text-[10px] bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
-                              {index + 1}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="truncate" style={{ fontFamily: '"Bitcount Prop Single", sans-serif' }}>{vault.name}</span>
-                              <span
-                                className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md border ${styles.container} ${styles.text} ${styles.border}`}
-                                style={{ fontFamily: '"JetBrains Mono", monospace' }}
-                              >
-                                <span className={`h-1.5 w-1.5 rounded-full ${styles.dot}`} />
-                                Owned
-                              </span>
-                            </div>
-                            <div className="text-[11px] text-neutral-600 dark:text-neutral-400 mt-0.5 truncate" style={{ fontFamily: '"JetBrains Mono", monospace' }}>{vault.pubkey}</div>
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="truncate" style={{ fontFamily: '"Bitcount Prop Single", sans-serif' }}>{vault.name}</span>
+                            <span
+                              className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md border bg-neutral-900/60 text-neutral-300 border-neutral-800`}
+                              style={{ fontFamily: '"JetBrains Mono", monospace' }}
+                            >
+                              <span className={`h-1.5 w-1.5 rounded-full ${styles.dot}`} />
+                              Owned
+                            </span>
                           </div>
-                          <div className="text-right">
-                            <div className="text-sm text-neutral-900 dark:text-neutral-100" style={{ fontFamily: '"Bitcount Prop Single", sans-serif' }}>{solAmount} SOL</div>
-                            <div className="text-[11px] text-neutral-600 dark:text-neutral-400" style={{ fontFamily: '"Bitcount Prop Single", sans-serif' }}>${usdAmount}</div>
-                          </div>
+                          <div className="text-[11px] text-neutral-500 mt-0.5 truncate" style={{ fontFamily: '"JetBrains Mono", monospace' }}>{vault.pubkey}</div>
+                          <div className="text-lg text-neutral-200" style={{ fontFamily: '"Bitcount Prop Single", sans-serif' }}>{solAmount} SOL</div>
+                          <div className="text-[11px] text-neutral-500" style={{ fontFamily: '"Bitcount Prop Single", sans-serif' }}>${usdAmount}</div>
                         </div>
                         {progressPct !== null && (
-                          <div className="mt-3 h-1.5 w-full bg-neutral-200/70 dark:bg-neutral-800/70 rounded">
+                          <div className="mt-3 h-1.5 w-full bg-neutral-800/70 rounded">
                             <div
                               className="h-1.5 rounded bg-green-500"
                               style={{ width: `${progressPct}%` }}
                             />
                           </div>
                         )}
-                        <div className="mt-2 flex items-center justify-between">
+                        <div className="mt-2 flex flex-col gap-2">
                           {progressPct !== null ? (
-                            <div className="text-[11px] text-neutral-600 dark:text-neutral-400" style={{ fontFamily: '"JetBrains Mono", monospace' }}>
+                            <div className="text-[11px] text-neutral-500" style={{ fontFamily: '"JetBrains Mono", monospace' }}>
                               Goal: {(goalLamports! / LAMPORTS_PER_SOL).toFixed(2)} SOL · {progressPct}%
                             </div>
                           ) : (
-                            <div className="text-[11px] text-neutral-500 dark:text-neutral-400" style={{ fontFamily: '"JetBrains Mono", monospace' }}>No goal set</div>
+                            <div className="text-[11px] text-neutral-500" style={{ fontFamily: '"JetBrains Mono", monospace' }}>No goal set</div>
                           )}
-                          <div className="flex items-center gap-1">
+                          <div className="flex flex-wrap items-center gap-1">
                             <button
                               onClick={() => { setGoalVault(vault); setGoalOpen(true); }}
-                              className="size-7 inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                              className="size-7 inline-flex items-center justify-center rounded-md border border-neutral-800 text-neutral-300 transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300"
                               title={progressPct !== null ? 'Edit goal' : 'Set goal'}
                               aria-label="Set goal"
                             >
@@ -945,7 +922,7 @@ const VaultsPage = () => {
                             </button>
                             <button
                               onClick={() => setComingSoonOpen({ name: vault.name })}
-                              className="h-7 px-2 inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-[11px]"
+                              className="h-7 px-2 inline-flex items-center justify-center rounded-md border border-neutral-800 text-neutral-300 text-[11px] transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300"
                               title="Stake"
                               aria-label="Stake"
                               style={{ fontFamily: '"JetBrains Mono", monospace' }}
@@ -954,7 +931,7 @@ const VaultsPage = () => {
                             </button>
                             <button
                               onClick={() => { setActiveVault(vault); setContributeOpen(true); }}
-                              className="h-7 px-2 inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-[11px]"
+                              className="h-7 px-2 inline-flex items-center justify-center rounded-md border border-neutral-800 text-neutral-300 text-[11px] transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300"
                               title="Contribute via Solana Pay"
                               aria-label="Contribute"
                               style={{ fontFamily: '"JetBrains Mono", monospace' }}
@@ -963,7 +940,7 @@ const VaultsPage = () => {
                             </button>
                             <button
                               onClick={() => { setActiveVault(vault); setTransferError(null); setTransferOpen(true); }}
-                              className="h-7 px-2 inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-[11px]"
+                              className="h-7 px-2 inline-flex items-center justify-center rounded-md border border-neutral-800 text-neutral-300 text-[11px] transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300"
                               title="Transfer ownership"
                               aria-label="Transfer ownership"
                               style={{ fontFamily: '"JetBrains Mono", monospace' }}
@@ -972,16 +949,16 @@ const VaultsPage = () => {
                             </button>
                           </div>
                         </div>
-                        <div className="mt-3 flex items-center justify-between">
+                        <div className="mt-3 flex flex-col gap-2">
                           <div className="text-[10px] text-neutral-500 dark:text-neutral-400" style={{ fontFamily: '"JetBrains Mono", monospace' }}>Balance updates live</div>
-                          <div className="flex items-center gap-1">
-                            <button aria-label="Deposit" disabled={riskLoading} onClick={() => { if (riskData?.lock) { setLockdownOpen(true); return; } setActiveVault(vault); setFlowError(null); setDepositOpen(true); setWithdrawOpen(false); }} className="size-7 inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+                          <div className="flex flex-wrap items-center gap-1">
+                            <button aria-label="Deposit" disabled={riskLoading} onClick={() => { if (riskData?.lock) { setLockdownOpen(true); return; } setActiveVault(vault); setFlowError(null); setDepositOpen(true); setWithdrawOpen(false); }} className="size-7 inline-flex items-center justify-center rounded-md border border-neutral-800 text-neutral-300 transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300">
                               <IconArrowDownRight className="h-3.5 w-3.5" />
                             </button>
-                            <button aria-label="Withdraw" disabled={riskLoading} onClick={() => { if (riskData?.lock) { setLockdownOpen(true); return; } setActiveVault(vault); setFlowError(null); setWithdrawOpen(true); setDepositOpen(false); }} className="size-7 inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+                            <button aria-label="Withdraw" disabled={riskLoading} onClick={() => { if (riskData?.lock) { setLockdownOpen(true); return; } setActiveVault(vault); setFlowError(null); setWithdrawOpen(true); setDepositOpen(false); }} className="size-7 inline-flex items-center justify-center rounded-md border border-neutral-800 text-neutral-300 transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300">
                               <IconArrowUpRight className="h-3.5 w-3.5" />
                             </button>
-                            <button aria-label="Close" onClick={() => { setActiveVault(vault); setDeleteError(null); setDeleteOpen(true); }} className="size-7 inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-red-50 dark:hover:bg-red-950/30">
+                            <button aria-label="Close" onClick={() => { setActiveVault(vault); setDeleteError(null); setDeleteOpen(true); }} className="size-7 inline-flex items-center justify-center rounded-md border border-neutral-800 text-neutral-300 transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300">
                               <IconTrash className="h-3.5 w-3.5" />
                             </button>
                           </div>
@@ -1004,7 +981,7 @@ const VaultsPage = () => {
                 return (
                   <motion.div
                     key={vault.pubkey}
-                    className="group rounded-lg border border-transparent px-3 py-2 flex items-center justify-between gap-3 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
+                    className="group rounded-lg border border-neutral-900 px-3 py-2 flex items-center justify-between gap-3 hover:bg-neutral-900/40 transition-colors"
                     initial={{ opacity: 0, y: 16 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, amount: 0.4 }}
@@ -1061,49 +1038,49 @@ const VaultsPage = () => {
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 min-w-[200px] justify-end">
+                                          <div className="flex items-center gap-3 min-w-[200px] justify-end text-neutral-300">
                       {/* change badge */}
                       <span
-                        className={`hidden sm:inline-flex items-center rounded px-1.5 py-0.5 text-[10px] border ${changePct > 0 ? 'text-green-700 dark:text-green-400 border-green-300/70 dark:border-green-800' : changePct < 0 ? 'text-red-700 dark:text-red-400 border-red-300/70 dark:border-red-800' : 'text-neutral-600 dark:text-neutral-400 border-neutral-300/70 dark:border-neutral-700'}`}
+                        className={`hidden sm:inline-flex items-center rounded px-1.5 py-0.5 text-[10px] border ${changePct > 0 ? 'text-green-400 border-green-800' : changePct < 0 ? 'text-red-400 border-red-800' : 'text-neutral-400 border-neutral-800'}`}
                         style={{ fontFamily: '"Bitcount Prop Single", sans-serif' }}
                       >
                         {changePct > 0 ? '+' : ''}{changePct}%
                       </span>
                       <span
-                        className="text-sm text-neutral-800 dark:text-neutral-100"
+                        className="text-lg text-neutral-200"
                         style={{ fontFamily: '"Bitcount Prop Single", sans-serif' }}
                       >
                         {solAmount} SOL
                       </span>
                       <span
-                        className="text-[11px] text-neutral-600 dark:text-neutral-400"
+                        className="text-[11px] text-neutral-500"
                         style={{ fontFamily: '"Bitcount Prop Single", monospace' }}
                       >
                         ${usdAmount}
                       </span>
-                      {/* hover actions */}
-                      <div className="opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity hidden md:flex items-center gap-1">
+                      {/* actions (always visible in list view) */}
+                      <div className="flex items-center gap-1">
                         <div className="flex items-center gap-1">
-                          <button aria-label="Set goal" onClick={() => { setGoalVault(vault); setGoalOpen(true); }} className="size-7 inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+                          <button aria-label="Set goal" onClick={() => { setGoalVault(vault); setGoalOpen(true); }} className="size-7 inline-flex items-center justify-center rounded-md border border-neutral-800 text-neutral-300 transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300">
                             <IconPlus className="h-3.5 w-3.5" />
                           </button>
-                          <button aria-label="Stake" onClick={() => setComingSoonOpen({ name: vault.name })} className="h-7 px-2 inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-[11px]" style={{ fontFamily: '"JetBrains Mono", monospace' }}>
+                          <button aria-label="Stake" onClick={() => setComingSoonOpen({ name: vault.name })} className="h-7 px-2 inline-flex items-center justify-center rounded-md border border-neutral-800 text-neutral-300 text-[11px] transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300" style={{ fontFamily: '"JetBrains Mono", monospace' }}>
                             Stake
                           </button>
-                          <button aria-label="Contribute" onClick={() => { setActiveVault(vault); setContributeOpen(true); }} className="h-7 px-2 inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-[11px]" style={{ fontFamily: '"JetBrains Mono", monospace' }}>
+                          <button aria-label="Contribute" onClick={() => { setActiveVault(vault); setContributeOpen(true); }} className="h-7 px-2 inline-flex items-center justify-center rounded-md border border-neutral-800 text-neutral-300 text-[11px] transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300" style={{ fontFamily: '"JetBrains Mono", monospace' }}>
                             Contribute
                           </button>
-                          <button aria-label="Transfer ownership" onClick={() => { setActiveVault(vault); setTransferError(null); setTransferOpen(true); }} className="h-7 px-2 inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-[11px]" style={{ fontFamily: '"JetBrains Mono", monospace' }}>
+                          <button aria-label="Transfer ownership" onClick={() => { setActiveVault(vault); setTransferError(null); setTransferOpen(true); }} className="h-7 px-2 inline-flex items-center justify-center rounded-md border border-neutral-800 text-neutral-300 text-[11px] transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300" style={{ fontFamily: '"JetBrains Mono", monospace' }}>
                             Transfer
                           </button>
                         </div>
                         <button aria-label="Deposit" disabled={riskLoading} onClick={() => { if (riskData?.lock) { setLockdownOpen(true); return; } setActiveVault(vault); setFlowError(null); setDepositOpen(true); setWithdrawOpen(false); }} className="size-7 inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800">
                           <IconArrowDownRight className="h-3.5 w-3.5" />
                         </button>
-                        <button aria-label="Withdraw" disabled={riskLoading} onClick={() => { if (riskData?.lock) { setLockdownOpen(true); return; } setActiveVault(vault); setFlowError(null); setWithdrawOpen(true); setDepositOpen(false); }} className="size-7 inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+                        <button aria-label="Withdraw" disabled={riskLoading} onClick={() => { if (riskData?.lock) { setLockdownOpen(true); return; } setActiveVault(vault); setFlowError(null); setWithdrawOpen(true); setDepositOpen(false); }} className="size-7 inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300">
                           <IconArrowUpRight className="h-3.5 w-3.5" />
                         </button>
-                        <button aria-label="Close" onClick={() => { setActiveVault(vault); setDeleteError(null); setDeleteOpen(true); }} className="size-7 inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-red-50 dark:hover:bg-red-950/30">
+                        <button aria-label="Close" onClick={() => { setActiveVault(vault); setDeleteError(null); setDeleteOpen(true); }} className="size-7 inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300">
                           <IconTrash className="h-3.5 w-3.5" />
                         </button>
                       </div>
@@ -1129,15 +1106,15 @@ const VaultsPage = () => {
               )}
               {/* Empty state */}
               {vaults && filteredAndSortedVaults && filteredAndSortedVaults.length === 0 && (
-                <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 p-6 text-center">
-                  <div className="text-sm text-neutral-700 dark:text-neutral-300" style={{ fontFamily: '"JetBrains Mono", monospace' }}>
-                    {query ? 'No vaults match your search.' : (canUseChain ? 'No vaults yet. Create your first one.' : 'Connect your wallet to load your vaults.')}
-                  </div>
+                <div className="rounded-lg border border-neutral-800 p-6 text-center bg-neutral-900">
+                                      <div className="text-sm text-neutral-400" style={{ fontFamily: '"JetBrains Mono", monospace' }}>
+                      {query ? 'No vaults match your search.' : (canUseChain ? 'No vaults yet. Create your first one.' : 'Connect your wallet to load your vaults.')}
+                    </div>
                   <div className="mt-3">
                     {canUseChain ? (
-                      <Button onClick={() => setCreating(true)}>New vault</Button>
+                      <Button variant="muted" onClick={() => setCreating(true)}>New vault</Button>
                     ) : (
-                      <Button onClick={() => login()}>Connect</Button>
+                      <Button variant="muted" onClick={() => login()}>Connect</Button>
                     )}
                   </div>
                 </div>

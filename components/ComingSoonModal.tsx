@@ -41,7 +41,7 @@ export default function ComingSoonModal({ open, onClose, title = "Coming Soon", 
                 {subtitle && <div className="text-[12px] text-neutral-500">{subtitle}</div>}
               </CardContent>
               <CardFooter className="flex justify-end">
-                <Button onClick={onClose}>Close</Button>
+                <Button onClick={onClose} className="transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300">Close</Button>
               </CardFooter>
             </Card>
           </motion.div>

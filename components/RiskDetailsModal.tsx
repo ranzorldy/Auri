@@ -120,7 +120,7 @@ export default function RiskDetailsModal({ open, onClose, state, rules, justific
                 {/* Expandable raw data */}
                 <button
                   onClick={() => setExpanded((e) => !e)}
-                  className="mt-1 inline-flex items-center gap-1 text-[12px] px-2 py-1 border rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 self-start"
+                  className="mt-1 inline-flex items-center gap-1 text-[12px] px-2 py-1 border rounded-md transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300 dark:hover:bg-neutral-800 self-start"
                 >
                   {expanded ? <IconChevronUp className="h-3.5 w-3.5" /> : <IconChevronDown className="h-3.5 w-3.5" />}
                   {expanded ? 'Hide raw data' : 'Show raw data'}
@@ -131,7 +131,7 @@ export default function RiskDetailsModal({ open, onClose, state, rules, justific
                       <span className="opacity-70">factors (Birdseye)</span>
                       <button
                         onClick={() => { try { navigator.clipboard.writeText(JSON.stringify(birdseye ?? {}, null, 2)); } catch {} }}
-                        className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 border rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                        className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 border rounded-md transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300 dark:hover:bg-neutral-800"
                       >
                         <IconCopy className="h-3 w-3" /> Copy JSON
                       </button>
@@ -141,7 +141,7 @@ export default function RiskDetailsModal({ open, onClose, state, rules, justific
                 )}
               </CardContent>
               <CardFooter className="flex justify-end">
-                <Button variant="outline" onClick={onClose}>Close</Button>
+                <Button variant="outline" onClick={onClose} className="transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300">Close</Button>
               </CardFooter>
             </Card>
           </motion.div>

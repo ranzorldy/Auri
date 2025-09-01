@@ -42,7 +42,7 @@ export default function LockdownNoticeModal({ open, onClose }: LockdownNoticeMod
                 </div>
               </CardContent>
               <CardFooter className="flex justify-end">
-                <Button variant="outline" onClick={onClose}>Okay</Button>
+                <Button variant="outline" onClick={onClose} className="transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300">Okay</Button>
               </CardFooter>
             </Card>
           </motion.div>

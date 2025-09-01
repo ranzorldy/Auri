@@ -117,8 +117,8 @@ export default function VaultAmountModal({ open, mode, vaultName, vaultAddress, 
                 )}
               </CardContent>
               <CardFooter className="flex gap-2 justify-end">
-                <Button variant="outline" onClick={onClose}>Cancel</Button>
-                <Button onClick={() => onSubmit(amount)} disabled={busy || !parsed.ok}>
+                <Button variant="muted" onClick={onClose} className="transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300">Cancel</Button>
+                <Button variant="muted" onClick={() => onSubmit(amount)} disabled={busy || !parsed.ok} className="transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300">
                   {busy ? (mode === "deposit" ? "Depositing..." : "Withdrawing...") : (mode === "deposit" ? "Deposit" : "Withdraw")}
                 </Button>
               </CardFooter>

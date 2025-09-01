@@ -109,10 +109,10 @@ export default function VaultGoalModal({ open, vaultName, vaultAddress, vaultLam
                 </div>
               </CardContent>
               <CardFooter className="flex gap-2 justify-between">
-                <Button variant="outline" onClick={() => onSave(null as any)} disabled={busy}>Clear</Button>
+                <Button variant="outline" onClick={() => onSave(null as any)} disabled={busy} className="transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300">Clear</Button>
                 <div className="flex gap-2 ml-auto">
-                  <Button variant="outline" onClick={onClose}>Cancel</Button>
-                  <Button onClick={() => onSave(amount)} disabled={busy || (!parsed.ok && amount.trim() !== "")}>Save</Button>
+                  <Button variant="outline" onClick={onClose} className="transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300">Cancel</Button>
+                  <Button onClick={() => onSave(amount)} disabled={busy || (!parsed.ok && amount.trim() !== "")} className="transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300">Save</Button>
                 </div>
               </CardFooter>
             </Card>

@@ -120,13 +120,13 @@ export default function TransactionDetailsModal({ open, onClose, signature, conn
               href={`https://solscan.io/tx/${signature}?cluster=devnet`}
               target="_blank"
               rel="noreferrer"
-              className="text-xs font-mono px-2 py-1 rounded border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+              className="text-xs font-mono px-2 py-1 rounded border border-neutral-300 dark:border-neutral-700 transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300 dark:hover:bg-neutral-800"
             >
               View on Solscan
             </a>
             <button
               onClick={onClose}
-              className="text-xs font-mono px-2 py-1 rounded border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+              className="text-xs font-mono px-2 py-1 rounded border border-neutral-300 dark:border-neutral-700 transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300 dark:hover:bg-neutral-800"
             >
               Close
             </button>
@@ -228,7 +228,7 @@ export default function TransactionDetailsModal({ open, onClose, signature, conn
                   <div className="text-[10px] uppercase tracking-wide opacity-70">Signature</div>
                   <div className="flex items-center gap-2 truncate">
                     <span className="truncate">{shorten(signature)}</span>
-                    <button onClick={() => navigator.clipboard?.writeText(signature)} className="text-[10px] font-mono px-2 py-0.5 rounded border border-neutral-300 dark:border-neutral-700">Copy</button>
+                    <button onClick={() => navigator.clipboard?.writeText(signature)} className="text-[10px] font-mono px-2 py-0.5 rounded border border-neutral-300 dark:border-neutral-700 transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300">Copy</button>
                   </div>
                 </div>
               </div>
