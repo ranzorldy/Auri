@@ -197,7 +197,21 @@ const VaultsPage = () => {
           // ignore malformed accounts
         }
       }
-      setVaults(myVaults);
+      setVaults((prev) => {
+        if (prev && prev.length > 0) {
+          try {
+            const prevMap = new Map(prev.map((p) => [p.pubkey, p.lamports] as const));
+            for (const v of myVaults) {
+              const before = prevMap.get(v.pubkey);
+              if (typeof before === 'number' && v.lamports > before) {
+                const deltaSol = ((v.lamports - before) / LAMPORTS_PER_SOL).toFixed(4);
+                emitToast(`Received ${deltaSol} SOL in ${v.name}`, 'success');
+              }
+            }
+          } catch {}
+        }
+        return myVaults;
+      });
       setLastFetchedCount(myVaults.length);
     } catch (e) {
       console.log("[Vaults] refreshVaults error", e);
@@ -670,6 +684,29 @@ const VaultsPage = () => {
     if (!filteredAndSortedVaults) return 0;
     return filteredAndSortedVaults.reduce((sum, v) => sum + v.lamports, 0) / LAMPORTS_PER_SOL;
   }, [filteredAndSortedVaults]);
+
+  // Subscribe to on-chain changes for all current vaults to auto-refresh and trigger toasts on incoming funds
+  useEffect(() => {
+    if (!connection || !vaults || vaults.length === 0) return;
+    let cancelled = false;
+    const subIds: number[] = [];
+    (async () => {
+      for (const v of vaults) {
+        try {
+          const id = await connection.onAccountChange(new PublicKey(v.pubkey), () => {
+            if (!cancelled) refreshVaults();
+          }, "confirmed");
+          subIds.push(id);
+        } catch {}
+      }
+    })();
+    return () => {
+      cancelled = true;
+      for (const id of subIds) {
+        try { connection.removeAccountChangeListener(id); } catch {}
+      }
+    };
+  }, [connection, vaults, refreshVaults]);
 
   return (
     <div className="flex w-full h-full bg-white border-neutral-200 dark:bg-neutral-950">
