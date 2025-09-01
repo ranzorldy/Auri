@@ -20,6 +20,7 @@ import RiskDetailsModal from "@/components/RiskDetailsModal";
 import LockdownNoticeModal from "@/components/LockdownNoticeModal";
 import VaultTransferModal from "@/components/VaultTransferModal";
 import VaultDeleteModal from "@/components/VaultDeleteModal";
+import VaultContributeModal from "@/components/VaultContributeModal";
 
 const statusOptions = ["Lockdown", "Disrupt", "Calm"] as const;
 type VaultStatus = (typeof statusOptions)[number];
@@ -96,6 +97,8 @@ const VaultsPage = () => {
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   // no page-level error banner; modal shows inline errors
+  // Contribute (public) modal state
+  const [contributeOpen, setContributeOpen] = useState(false);
 
   const REFRESH_DELAY_MS = 10000; // allow cluster/indexers to catch up
 
@@ -913,6 +916,15 @@ const VaultsPage = () => {
                               Stake
                             </button>
                             <button
+                              onClick={() => { setActiveVault(vault); setContributeOpen(true); }}
+                              className="h-7 px-2 inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-[11px]"
+                              title="Contribute via Solana Pay"
+                              aria-label="Contribute"
+                              style={{ fontFamily: '"JetBrains Mono", monospace' }}
+                            >
+                              Contribute
+                            </button>
+                            <button
                               onClick={() => { setActiveVault(vault); setTransferError(null); setTransferOpen(true); }}
                               className="h-7 px-2 inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-[11px]"
                               title="Transfer ownership"
@@ -1028,7 +1040,7 @@ const VaultsPage = () => {
                       </span>
                       <span
                         className="text-[11px] text-neutral-600 dark:text-neutral-400"
-                        style={{ fontFamily: '"Bitcount Prop Single", sans-serif' }}
+                        style={{ fontFamily: '"Bitcount Prop Single", monospace' }}
                       >
                         ${usdAmount}
                       </span>
@@ -1040,6 +1052,9 @@ const VaultsPage = () => {
                           </button>
                           <button aria-label="Stake" onClick={() => setComingSoonOpen({ name: vault.name })} className="h-7 px-2 inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-[11px]" style={{ fontFamily: '"JetBrains Mono", monospace' }}>
                             Stake
+                          </button>
+                          <button aria-label="Contribute" onClick={() => { setActiveVault(vault); setContributeOpen(true); }} className="h-7 px-2 inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-[11px]" style={{ fontFamily: '"JetBrains Mono", monospace' }}>
+                            Contribute
                           </button>
                           <button aria-label="Transfer ownership" onClick={() => { setActiveVault(vault); setTransferError(null); setTransferOpen(true); }} className="h-7 px-2 inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-[11px]" style={{ fontFamily: '"JetBrains Mono", monospace' }}>
                             Transfer
@@ -1169,6 +1184,12 @@ const VaultsPage = () => {
         }}
       />
       <Toaster />
+      <VaultContributeModal
+        open={Boolean(activeVault) && contributeOpen}
+        vaultName={activeVault?.name ?? ""}
+        vaultAddress={activeVault?.pubkey ?? ""}
+        onClose={() => { setContributeOpen(false); setActiveVault(null); }}
+      />
       <VaultGoalModal
         open={goalOpen && Boolean(goalVault)}
         vaultName={goalVault?.name ?? ""}
