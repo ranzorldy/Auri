@@ -1,18 +1,18 @@
 ## Auri — Smart Vaults on Solana (Next.js 15, React 19)
 
 <!-- Banner Placeholder: replace ./public/banner.png with your banner asset -->
-![Auri Banner Placeholder](./public/banner.png)
+![Auri Banner Placeholder](./public/github-header-banner.png)
 
-<!-- GitHub Stats Badges: replace REPO_OWNER/REPO_NAME with actual repo slug -->
-[![Stars](https://img.shields.io/github/stars/REPO_OWNER/REPO_NAME.svg?style=social)](https://github.com/REPO_OWNER/REPO_NAME)
-[![Forks](https://img.shields.io/github/forks/REPO_OWNER/REPO_NAME.svg?style=social)](https://github.com/REPO_OWNER/REPO_NAME/fork)
-[![Issues](https://img.shields.io/github/issues/REPO_OWNER/REPO_NAME.svg)](https://github.com/REPO_OWNER/REPO_NAME/issues)
-[![PRs](https://img.shields.io/github/issues-pr/REPO_OWNER/REPO_NAME.svg)](https://github.com/REPO_OWNER/REPO_NAME/pulls)
-[![Last Commit](https://img.shields.io/github/last-commit/REPO_OWNER/REPO_NAME.svg)](https://github.com/REPO_OWNER/REPO_NAME/commits)
-[![License](https://img.shields.io/github/license/REPO_OWNER/REPO_NAME.svg)](LICENSE)
-[![Contributors](https://img.shields.io/github/contributors/REPO_OWNER/REPO_NAME.svg)](https://github.com/REPO_OWNER/REPO_NAME/graphs/contributors)
-[![Top Language](https://img.shields.io/github/languages/top/REPO_OWNER/REPO_NAME.svg)](https://github.com/REPO_OWNER/REPO_NAME)
-[![Repo Size](https://img.shields.io/github/repo-size/REPO_OWNER/REPO_NAME.svg)](https://github.com/REPO_OWNER/REPO_NAME)
+<!-- GitHub Stats Badges -->
+[![Stars](https://img.shields.io/github/stars/ranzorldy/Auri.svg?style=social)](https://github.com/ranzorldy/Auri)
+[![Forks](https://img.shields.io/github/forks/ranzorldy/Auri.svg?style=social)](https://github.com/ranzorldy/Auri/fork)
+[![Issues](https://img.shields.io/github/issues/ranzorldy/Auri.svg)](https://github.com/ranzorldy/Auri/issues)
+[![PRs](https://img.shields.io/github/issues-pr/ranzorldy/Auri.svg)](https://github.com/ranzorldy/Auri/pulls)
+[![Last Commit](https://img.shields.io/github/last-commit/ranzorldy/Auri.svg)](https://github.com/ranzorldy/Auri/commits)
+[![License](https://img.shields.io/github/license/ranzorldy/Auri.svg)](LICENSE)
+[![Contributors](https://img.shields.io/github/contributors/ranzorldy/Auri.svg)](https://github.com/ranzorldy/Auri/graphs/contributors)
+[![Top Language](https://img.shields.io/github/languages/top/ranzorldy/Auri.svg)](https://github.com/ranzorldy/Auri)
+[![Repo Size](https://img.shields.io/github/repo-size/ranzorldy/Auri.svg)](https://github.com/ranzorldy/Auri)
 
 Auri is a dApp built on solana that helps users avoid market FOMO buys by surfacing token risk signals for the tokens they hold in their wallets. It achieves the above by letting users create smart vaults which would hold their Solana and based on market volatality and other factors they would be locked down by our AI agents.
 
