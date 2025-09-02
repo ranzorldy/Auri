@@ -119,32 +119,15 @@ npm start
 
 ## Architecture Diagrams
 
-<!-- Mermaid diagram placeholder: refine as your architecture evolves -->
-```mermaid
-flowchart LR
-  subgraph "Client"
-    A["Next.js App (React 19)"]
-  end
-  subgraph "Providers"
-    P1["Web3Auth Provider"]
-    P2["SolanaAuth Provider"]
-    P3["React Query Client"]
-  end
-  subgraph "APIs"
-    API1["/api/market/sol-msol"]
-    API2["/api/risk/analyze"]
-    API3["/api/pay/contribute"]
-  end
-  A --> P1
-  A --> P2
-  A --> P3
-  A --> API1
-  A --> API2
-  A --> API3
-```
+![Auri Architecture](./public/Architecture.png)
 
-<!-- Static diagram placeholder: add your exported PNG/SVG to docs/architecture -->
-![Architecture Diagram Placeholder](./docs/architecture/auri-architecture.png)
+---
+
+## On-chain References
+
+- Program ID: `HDmSK6yiv5CxNwNBMjYGGN1mU6RzpNWvyodzW3VydnQN`
+- Latest devnet blockhash: `6P9Y6xwKFxFA7eJGssYsaEhAGR787ueMjuXUE7JKEnc8`
+- Explorer: [Transaction on devnet](https://explorer.solana.com/tx/57d3o8GoL2GDcar7nScUzjd7Qp5i2DwSJPNnC27cpW61smccxR8wRHsxeNwh8SsnYnb9wq1zwe13da3V3htLCDN?cluster=devnet)
 
 ---
 
@@ -263,8 +246,8 @@ Env used: `SOLANA_RPC_ENDPOINT`
 ![Landing Page](./public/landing.png)
 ![Dashboard](./public/dashboard.png)
 ![Create Vault](./public/vaults.png)
-![Risk Analysis](./public/risk-analysis.png)
-![Settings](./public/settings.png)
+![Risk Analysis](./public/Risk-analysis.png)
+![Settings](./public/Settings.png)
 
 
 ---
