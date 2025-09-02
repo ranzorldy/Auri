@@ -40,7 +40,7 @@ export default function ComingSoonModal({ open, onClose, title = "Coming Soon", 
                 <div className="text-sm text-neutral-700 dark:text-neutral-300">This feature is on the way.</div>
                 {subtitle && <div className="text-[12px] text-neutral-500">{subtitle}</div>}
               </CardContent>
-              <CardFooter className="flex justify-end">
+              <CardFooter className="flex justify-end" style={{ fontFamily: '"JetBrains Mono", monospace' }}>
                 <Button onClick={onClose} className="transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300">Close</Button>
               </CardFooter>
             </Card>

@@ -84,7 +84,7 @@ export default function VaultContributeModal({ open, vaultName, vaultAddress, de
 								<div className="text-[11px] text-neutral-500">Scan with Phantom to approve</div>
 							</div>
 							<div className="flex items-center justify-center py-2">
-								<div className="bg-white p-3 rounded-md border border-neutral-200 dark:border-neutral-800">
+								<div className="bg-neutral-900 dark:bg-neutral-950 p-3 rounded-md border border-neutral-800">
 									{solanaPayURL ? (
 										<QRCode value={solanaPayURL} size={196} />
 									) : (
@@ -98,7 +98,7 @@ export default function VaultContributeModal({ open, vaultName, vaultAddress, de
 								</div>
 							)}
 						</CardContent>
-						<CardFooter className="flex gap-2 justify-end">
+						<CardFooter className="flex gap-2 justify-end" style={{ fontFamily: '"JetBrains Mono", monospace' }}>
 							<Button variant="outline" onClick={onClose}>Close</Button>
 						</CardFooter>
 					</Card>

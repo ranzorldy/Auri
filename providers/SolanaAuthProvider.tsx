@@ -26,12 +26,10 @@ const SolanaAuthContext = createContext<SolanaAuthContextValue | undefined>(unde
 function SolanaWalletBridge({ onAccounts, onConnection }: { onAccounts: (acc: string[] | null) => void; onConnection: (conn: Connection | null) => void }) {
   const { accounts, connection } = useSolanaWallet();
   useEffect(() => {
-    console.log("[SolanaBridge] hook accounts", accounts);
     if (accounts && accounts.length > 0) onAccounts(accounts as string[]);
   }, [accounts, onAccounts]);
   useEffect(() => {
     if (connection) {
-      console.log("[SolanaBridge] hook connection available");
       onConnection(connection as unknown as Connection);
     }
   }, [connection, onConnection]);
@@ -59,9 +57,7 @@ export function SolanaAuthProvider({ children }: { children: React.ReactNode }) 
     if (!connection) return;
     try {
       setLoadingBalance(true);
-      console.log("[SolanaAuth] fetchBalance for", addr, "via", connection.rpcEndpoint);
       const lamports = await connection.getBalance(new PublicKey(addr));
-      console.log("[SolanaAuth] balance (lamports)", lamports);
       setBalanceLamports(lamports);
     } finally {
       setLoadingBalance(false);
@@ -69,14 +65,11 @@ export function SolanaAuthProvider({ children }: { children: React.ReactNode }) 
   };
 
   const refresh = async () => {
-    console.log("[SolanaAuth] refresh() called (state-driven)");
     try {
       const next = accounts && accounts.length > 0 ? accounts[0] : null;
-      console.log("[SolanaAuth] resolved address", next);
       setAddress(next ?? null);
       if (next) await fetchBalance(next);
-    } catch (err) {
-      console.log("[SolanaAuth] refresh error", err);
+    } catch {
     }
   };
 
@@ -114,7 +107,6 @@ export function SolanaAuthProvider({ children }: { children: React.ReactNode }) 
     // Allow overriding the RPC URL via env for higher rate limits
     const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com";
     const conn = new Connection(rpcUrl, { commitment: "confirmed" });
-    console.log("[SolanaAuth] Connection initialized", conn.rpcEndpoint);
     setConnection(conn);
   }, []);
 
@@ -123,7 +115,6 @@ export function SolanaAuthProvider({ children }: { children: React.ReactNode }) 
   // Always enable the Solana wallet hook (will no-op until wallet ready)
   useEffect(() => {
     if (!hookEnabled) {
-      console.log("[SolanaAuth] enabling Solana hook (unconditional)");
       setHookEnabled(true);
     }
   }, [hookEnabled]);
@@ -131,7 +122,6 @@ export function SolanaAuthProvider({ children }: { children: React.ReactNode }) 
   // Whenever a provider appears (user connected via Wallet UI or session restored), refresh accounts
   useEffect(() => {
     const provider = web3authCtx.web3auth?.provider;
-    console.log("[SolanaAuth] provider changed", Boolean(provider));
     // provider for Solana may remain null; rely on hook accounts instead
     refresh();
     // Try again shortly in case provider needs a moment to be ready
@@ -150,19 +140,16 @@ export function SolanaAuthProvider({ children }: { children: React.ReactNode }) 
     let cancelled = false;
     (async () => {
       try {
-        console.log("[SolanaAuth] attempting SolanaWallet.requestAccounts() via @web3auth/solana-provider");
         const mod = await import("@web3auth/solana-provider");
         const solanaWallet = new (mod as any).SolanaWallet(provider);
         const acc: string[] = await solanaWallet.requestAccounts();
         if (cancelled) return;
-        console.log("[SolanaAuth] SolanaWallet.requestAccounts() ->", acc);
         if (Array.isArray(acc) && acc.length > 0) {
           setAccounts(acc);
           setAddress(acc[0] ?? null);
           await fetchBalance(acc[0]);
         }
-      } catch (err) {
-        console.log("[SolanaAuth] SolanaWallet.requestAccounts failed", err);
+      } catch {
       }
     })();
     return () => {
@@ -173,7 +160,6 @@ export function SolanaAuthProvider({ children }: { children: React.ReactNode }) 
 
   // Also refresh when connection state flips to connected
   useEffect(() => {
-    console.log("[SolanaAuth] isConnected changed", web3authCtx.isConnected);
     if (web3authCtx.isConnected && !address) {
       refresh();
     }
@@ -181,7 +167,6 @@ export function SolanaAuthProvider({ children }: { children: React.ReactNode }) 
   }, [web3authCtx.isConnected]);
 
   useEffect(() => {
-    console.log("[SolanaAuth] address changed", address);
     if (address) {
       fetchBalance(address);
     } else {
@@ -211,14 +196,10 @@ export function SolanaAuthProvider({ children }: { children: React.ReactNode }) 
       login: async () => {
         // Best-effort: some versions do not accept object params, so ignore errors
         try {
-          console.log("[SolanaAuth] login: attempting to switch to Solana devnet");
           await (switchChain as unknown as (id: string) => Promise<void>)("0x3");
-        } catch (e) {
-          console.log("[SolanaAuth] switchChain failed (continuing)", e);
+        } catch {
         }
-        console.log("[SolanaAuth] login: calling connect()");
         await connect();
-        console.log("[SolanaAuth] login: connected, attempting to fetch accounts via @web3auth/solana-provider");
         try {
           const provider = (web3authCtx as any)?.web3auth?.provider;
           if (provider) {
@@ -231,12 +212,10 @@ export function SolanaAuthProvider({ children }: { children: React.ReactNode }) 
               await fetchBalance(acc[0]);
             }
           }
-        } catch (err) {
-          console.log("[SolanaAuth] post-connect requestAccounts failed", err);
+        } catch {
         }
       },
       logout: async () => {
-        console.log("[SolanaAuth] logout: calling disconnect()");
         await disconnect();
         setAddress(null);
         setBalanceLamports(null);
@@ -261,7 +240,6 @@ export function SolanaAuthProvider({ children }: { children: React.ReactNode }) 
       {hookEnabled && (
         <SolanaWalletBridge
           onAccounts={(acc) => {
-            console.log("[SolanaAuth] bridge accounts", acc);
             setAccounts(acc);
             if (acc && acc.length > 0) {
               setAddress(acc[0] ?? null);
@@ -274,7 +252,6 @@ export function SolanaAuthProvider({ children }: { children: React.ReactNode }) 
               if (conn && (conn as any).rpcEndpoint?.includes("devnet")) {
                 setConnection(conn);
               } else {
-                console.log("[SolanaAuth] Ignoring non-devnet wallet connection", (conn as any)?.rpcEndpoint);
               }
             } catch {
               // keep existing connection

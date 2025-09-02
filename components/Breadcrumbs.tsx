@@ -74,9 +74,9 @@ export default function Breadcrumbs({ className }: { className?: string }) {
           dot: "bg-red-500",
         } as const
       : {
-          container: "bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800",
-          text: "text-green-700 dark:text-green-400",
-          dot: "bg-green-500",
+          container: "bg-neutral-50 dark:bg-neutral-900/50 border-neutral-200 dark:border-neutral-700",
+          text: "text-neutral-700 dark:text-neutral-300",
+          dot: "bg-neutral-400",
         } as const;
   }, [hasData, isLockdown]);
 

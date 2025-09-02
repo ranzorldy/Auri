@@ -40,7 +40,7 @@ const steps: Step[] = [
     description: "Get easily connected to your wallet with Web3Auth, and start using the dapp.",
     icon: Wallet,
     videoSrcs: ["/connect-auri-1756237053649.mp4"],
-    poster: "/solana.jpg",
+    poster: "/black-fabric-texture-background-vector.jpg",
   },
   {
     title: "Create",
@@ -50,7 +50,7 @@ const steps: Step[] = [
     videoSrcs: [
       "/create-vault.mp4",
     ],
-    poster: "/solana.jpg",
+    poster: "/black-fabric-texture-background-vector.jpg",
   },
   {
     title: "Chill",
@@ -60,7 +60,7 @@ const steps: Step[] = [
     videoSrcs: [
       "/Vault-Status.mp4",
     ],
-    poster: "/solana.jpg",
+    poster: "/black-fabric-texture-background-vector.jpg",
   },
 ]
 

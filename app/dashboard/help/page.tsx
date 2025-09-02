@@ -133,7 +133,7 @@ export default function HelpPage() {
             {/* Page header */}
             <div id="top" className="border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/40 dark:bg-neutral-900/40">
               <div className="px-5 md:px-8 py-6">
-                <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-50 font-bitcount-prop">Help</h1>
+                <h1 className="text-2xl md:text-3xl  tracking-tight text-neutral-900 dark:text-neutral-50 font-bitcount-prop">Help</h1>
                 <p className="mt-1 text-sm md:text-base text-neutral-600 dark:text-neutral-300 max-w-3xl" style={{ textAlign: "justify" }}>
                   Learn about Auri’s AI-guarded vaults, then connect your wallet, explore the dashboard, create vaults, and run risk checks. Follow these steps to get productive quickly.
                 </p>
@@ -230,9 +230,6 @@ export default function HelpPage() {
                         )}
                       </div>
 
-                      <div className="mt-4 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 p-3 text-xs text-neutral-600 dark:text-neutral-300" style={{ textAlign: "justify" }}>
-                        Tip: Replace the preview image with a lightweight MP4/WebM for richer guidance.
-                      </div>
                     </section>
                   ))}
                 </div>

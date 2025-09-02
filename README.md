@@ -1,50 +1,294 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Auri — Smart Vaults on Solana (Next.js 15, React 19)
 
-## Getting Started
+<!-- Banner Placeholder: replace ./public/banner.png with your banner asset -->
+![Auri Banner Placeholder](./public/banner.png)
 
-First, run the development server:
+<!-- GitHub Stats Badges: replace REPO_OWNER/REPO_NAME with actual repo slug -->
+[![Stars](https://img.shields.io/github/stars/REPO_OWNER/REPO_NAME.svg?style=social)](https://github.com/REPO_OWNER/REPO_NAME)
+[![Forks](https://img.shields.io/github/forks/REPO_OWNER/REPO_NAME.svg?style=social)](https://github.com/REPO_OWNER/REPO_NAME/fork)
+[![Issues](https://img.shields.io/github/issues/REPO_OWNER/REPO_NAME.svg)](https://github.com/REPO_OWNER/REPO_NAME/issues)
+[![PRs](https://img.shields.io/github/issues-pr/REPO_OWNER/REPO_NAME.svg)](https://github.com/REPO_OWNER/REPO_NAME/pulls)
+[![Last Commit](https://img.shields.io/github/last-commit/REPO_OWNER/REPO_NAME.svg)](https://github.com/REPO_OWNER/REPO_NAME/commits)
+[![License](https://img.shields.io/github/license/REPO_OWNER/REPO_NAME.svg)](LICENSE)
+[![Contributors](https://img.shields.io/github/contributors/REPO_OWNER/REPO_NAME.svg)](https://github.com/REPO_OWNER/REPO_NAME/graphs/contributors)
+[![Top Language](https://img.shields.io/github/languages/top/REPO_OWNER/REPO_NAME.svg)](https://github.com/REPO_OWNER/REPO_NAME)
+[![Repo Size](https://img.shields.io/github/repo-size/REPO_OWNER/REPO_NAME.svg)](https://github.com/REPO_OWNER/REPO_NAME)
+
+Auri is a dApp built on solana that helps users avoid market FOMO buys by surfacing token risk signals for the tokens they hold in their wallets. It achieves the above by letting users create smart vaults which would hold their Solana and based on market volatality and other factors they would be locked down by our AI agents.
+
+### Highlights of Our Project
+- Wallet Integration auth via Web3Auth (Use whatever you like for sigining up)
+- Create Vaults and Store your valueable SOL for safekeeping by AI agents
+- Users can also utilize Solana Pay to accept contributions from other users using Metamask/Phantom
+- Transfer Ownership of your Vaults to your trusted ones
+- Set Personal Goals for each vault you create
+- Get Proper Analysis of your Tokens and states by our AI agents.
+- Stake your SOL directly from your vaults and yield gains. (Feature Comming Soon)
+
+---
+
+## Tech Stack
+- Next.js 15 + React 19
+- TypeScript, Tailwind CSS 4
+- Web3Auth , @solana/web3.js
+- Data fetching/caching: @tanstack/react-query
+- Animations: motion, gsap, lenis
+- Charts: recharts
+
+---
+
+## Project Structure
+```
+app/
+  layout.tsx              # Root providers: Web3Auth, ChainInitializer, SolanaAuth, Toaster
+  page.tsx              
+  api/
+    market/sol-msol/route.ts     # Staking handler route 
+    risk/analyze/route.ts        # AI agent risk analysis route (BirdEye + Gemini)
+    pay/contribute/route.ts      # Solana Pay tx builder for vault contributions
+  dashboard/
+    layout.tsx            # Dashboard shell: Sidebar, Breadcrumbs, News, Loader
+    page.tsx              # Home; plus /history, /help, /settings, /vaults, /vaults/create
+components/               # UI (charts, modals, sidebar, toasts, loaders, etc.)
+providers/                # Web3Auth, SolanaAuth, React Query, Chain init, Lenis
+lib/                      # constants (PROGRAM_ID), utils (cn)
+idl/                      # Program IDL placeholder
+```
+
+---
+
+## Features
+- Landing page with parallax-style sections (Hero, Mission, Features, HowItWorks, FAQ)
+- Dashboard shell with sidebar and news panel
+- Vault modals: `VaultCreateModal`, `VaultContributeModal`, `VaultTransferModal`, `VaultGoalModal`, `VaultDeleteModal`, `VaultAmountModal`
+- Risk components: `RiskDetailsModal`, `LockdownNoticeModal`
+- Charts: `Chart`, `AreaChart` with `recharts`
+- Toast notifications and page loader
+
+---
+
+## Environment Variables
+Create `.env.local` in the repo root. Fill as needed (optional keys are marked).
 
 ```bash
+# Solana RPCs
+NEXT_PUBLIC_SOLANA_RPC_URL=https://api.devnet.solana.com             # optional; client-side in SolanaAuthProvider
+SOLANA_RPC_ENDPOINT=https://api.devnet.solana.com                    # used by /api/pay/contribute
+SOLANA_RPC_MAINNET=https://api.mainnet-beta.solana.com               # used by /api/risk/analyze when chain fetch is enabled
+
+# BirdEye (strongly recommended to avoid 429)
+BIRDEYE_API_KEY=your_birdeye_key
+
+# Risk engine model key (optional: enables Gemini analysis path)
+GEMINI_API_KEY=your_gemini_key                                       # or GOOGLE_GEMINI_API_KEY
+
+# Risk engine behavior
+RISK_CHAIN_FETCH=0                                                    # set to 1 to fetch wallet SPL holdings on-chain
+
+# Market API override
+MSOL_MINT=mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So
+
+# Web3Auth (client id currently in code; you can move it to env if desired)
+NEXT_PUBLIC_WEB3AUTH_CLIENT_ID=your_web3auth_client_id
+```
+
+Notes:
+
+- `/api/risk/analyze` uses only BirdEye market data by default. Set `GEMINI_API_KEY` to enable Gemini JSON reasoning.
+
+---
+
+## Getting Started
+```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# open http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Landing is at `/`.
+- Dashboard lives under `/dashboard`.
+- Use the sidebar’s Connect action (Web3Auth) to authenticate a wallet session.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Web3Auth (MetaMask) Setup
-
-This project includes Web3Auth Modal integration. To enable it, set the client id:
-
-1. Create a `.env.local` file in the project root with:
-
-```
-NEXT_PUBLIC_WEB3AUTH_CLIENT_ID=YOUR_CLIENT_ID
+Build and start:
+```bash
+npm run build
+npm start
 ```
 
-2. Get a Client ID from the Web3Auth Dashboard.
+---
 
-3. Start the app. Use the "Connect Wallet" button in the dashboard sidebar to authenticate.
+## Architecture Diagrams
 
-## Learn More
+<!-- Mermaid diagram placeholder: refine as your architecture evolves -->
+```mermaid
+flowchart LR
+  subgraph "Client"
+    A["Next.js App (React 19)"]
+  end
+  subgraph "Providers"
+    P1["Web3Auth Provider"]
+    P2["SolanaAuth Provider"]
+    P3["React Query Client"]
+  end
+  subgraph "APIs"
+    API1["/api/market/sol-msol"]
+    API2["/api/risk/analyze"]
+    API3["/api/pay/contribute"]
+  end
+  A --> P1
+  A --> P2
+  A --> P3
+  A --> API1
+  A --> API2
+  A --> API3
+```
 
-To learn more about Next.js, take a look at the following resources:
+<!-- Static diagram placeholder: add your exported PNG/SVG to docs/architecture -->
+![Architecture Diagram Placeholder](./docs/architecture/auri-architecture.png)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Architecture & Providers
+- `app/layout.tsx`
+  - SSR extracts Web3Auth state via `cookieToWeb3AuthState`.
+  - Wraps the app with `Web3AuthProvider` + `QueryClientProvider` + `SolanaAuthProvider`.
+  - Provides a global `Toaster`.
 
-## Deploy on Vercel
+- `providers/SolanaAuthProvider.tsx`
+  - Bridges `@web3auth/modal/react` Solana wallet into a simple React context: `{ address, balanceSOL, login, logout, refresh, accounts, connection, userInfo }`.
+  - Persists `userInfo` and `address` in `localStorage` for fast hydration.
+  - Uses `NEXT_PUBLIC_SOLANA_RPC_URL` (default: devnet) for balance reads.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `providers/Web3AuthProvider.tsx`
+  - Configures Web3Auth (SAPPHIRE_DEVNET) and React Query client.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `providers/ChainInitializer.tsx`
+  - Stub to switch chain if desired; no forced switch by default.
+
+---
+
+## API Reference
+
+
+### 1. Risk Analysis — POST `/api/risk/analyze`
+Analyzes one or more SPL token mints for risk signals. Uses BirdEye market data and a simple local ruleset; optionally invokes Gemini for JSON reasoning.
+
+Body:
+```json
+{
+  "walletAddress": "optional_solana_pubkey",
+  "mints": ["optional_mint1", "optional_mint2"]
+}
+```
+
+Behavior:
+- If `RISK_CHAIN_FETCH=1` and `walletAddress` is set, it will fetch detected SPL token mints from chain (mainnet RPC) and analyze up to 25 tokens.
+- If no tokens are found, analyses SOL as a fallback (`So1111...`).
+
+Example:
+```bash
+curl -X POST http://localhost:3000/api/risk/analyze \
+  -H "Content-Type: application/json" \
+  -d '{
+    "walletAddress": "YOUR_WALLET_ADDRESS",
+    "mints": []
+  }'
+```
+
+Response (abridged):
+```json
+{
+  "walletAddress": "...",
+  "results": [
+    {
+      "mint": "...",
+      "metrics": { "liquidityUsd": 12345, "priceChange1hPercent": 12.3, ... },
+      "rules": [ { "id": "liquidity", "ok": true, ... } ],
+      "gemini": { "risk": "LOW_RISK", "justification": "...", ... },
+      "birdseye": { "price": 0.01, "liquidity": 12345, ... }
+    }
+  ],
+  "lock": false,
+  "state": "Calm",
+  "debug": { "total": 1, "model": "gemini-2.5-flash" }
+}
+```
+
+Env used: `BIRDEYE_API_KEY`, `GEMINI_API_KEY` or `GOOGLE_GEMINI_API_KEY` (optional), `SOLANA_RPC_MAINNET`, `RISK_CHAIN_FETCH`
+
+---
+
+### 3) Vault Contribution Tx — `/api/pay/contribute`
+Implements a Solana transaction builder compatible with wallet flows (GET handshake + POST transaction). Defaults to Devnet.
+
+GET handshake (label/icon):
+```bash
+curl "http://localhost:3000/api/pay/contribute?name=MyVault&vault=VaultPubkey&amount=0.1"
+```
+
+POST build transaction:
+```bash
+curl -X POST "http://localhost:3000/api/pay/contribute?name=MyVault&vault=VaultPubkey&amount=0.1" \
+  -H "Content-Type: application/json" \
+  -d '{"account":"ContributorPubkey"}'
+```
+
+Response (abridged):
+```json
+{
+  "transaction": "base64_serialized_tx",
+  "message": "Contribute 0.1 SOL to MyVault"
+}
+```
+
+Under the hood:
+- Encodes an instruction for `PROGRAM_ID` from `lib/constants.ts` using Anchor discriminator `global:contribute` and arguments `(name: string, amount: u64)`.
+- Sets `feePayer = contributor` and fills recent blockhash.
+
+Env used: `SOLANA_RPC_ENDPOINT`
+
+---
+
+## UI Notes
+- Landing animations are powered by `motion` with smooth scroll via `LenisProvider`.
+- Dashboard shows `Breadcrumbs`, `NewsSidebar`, and a `PageLoader` until wallet address is ready.
+- Charting uses `recharts`; market data series is consumed from `/api/market/sol-msol`.
+
+---
+
+## Scripts
+```json
+{
+  "dev": "next dev --turbopack",
+  "build": "next build",
+  "start": "next start",
+  "lint": "next lint"
+}
+```
+
+---
+
+## Deployment
+- Works well on Vercel. Ensure all required env vars are configured in the dashboard.
+- `/api/pay/contribute` exports `runtime = "nodejs"`; keep Node runtime enabled in your platform.
+- Provide BirdEye and (optionally) Gemini keys to reduce rate limits and enable model-based justifications.
+
+---
+
+## Troubleshooting
+- BirdEye 429 / empty data:
+  - Set `BIRDEYE_API_KEY` and retry; the APIs implement basic caching and throttling.
+- Wallet not connecting:
+  - Confirm Web3Auth client id configuration and allow pop-ups.
+  - Ensure you’re on Devnet unless you changed RPCs.
+- Risk analysis returns limited fields:
+  - Only available fields are used. Set `RISK_CHAIN_FETCH=1` and `SOLANA_RPC_MAINNET` to enrich input from on-chain.
+
+---
+
+## Contributing
+PRs welcome. Please keep code clear, typed, and consistent with existing patterns.
+
+## License
+Proprietary or to be defined by the repository owner.
+

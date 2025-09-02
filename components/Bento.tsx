@@ -615,19 +615,22 @@ const MagicBento: React.FC<BentoProps & { mergeFirstTwo?: boolean }> = ({
       if (!address || !connection) return;
       try {
         const ownerPk = new PublicKey(address);
-        const filters = [{ memcmp: { offset: 8, bytes: ownerPk.toBase58() } }];
+        // Anchor layout: 8 (disc) + 32 (creator) + 32 (owner) + 4 (name len) + name + 1 (bump)
+        const filters = [{ memcmp: { offset: 8 + 32, bytes: ownerPk.toBase58() } }];
         const accounts = await connection.getProgramAccounts(PROGRAM_ID, { filters });
         let totalLamports = 0;
         let vaultCount = 0;
         for (const acct of accounts) {
           try {
             const data = acct.account.data;
-            if (data.length < 8 + 32 + 1) continue;
-            const ownerBytes = data.slice(8, 8 + 32);
+            if (data.length < 8 + 32 + 32 + 1) continue;
+            // Extract owner field after creator
+            const ownerBytes = data.slice(8 + 32, 8 + 32 + 32);
             const owner = new PublicKey(ownerBytes);
             if (owner.toBase58() !== ownerPk.toBase58()) continue;
-            const nameLen = new DataView(data.buffer, data.byteOffset + 8 + 32, 4).getUint32(0, true);
-            const nameStart = 8 + 32 + 4;
+            // Read Anchor string length and ensure bounds
+            const nameLen = new DataView(data.buffer, data.byteOffset + 8 + 32 + 32, 4).getUint32(0, true);
+            const nameStart = 8 + 32 + 32 + 4;
             const nameEnd = nameStart + nameLen;
             if (nameEnd <= data.length) {
               vaultCount += 1;

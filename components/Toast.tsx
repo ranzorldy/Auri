@@ -42,9 +42,9 @@ export function Toaster() {
 
   const variantStyles = useMemo(
     () => ({
-      success: "bg-neutral-950 text-green-400 border border-neutral-600",
-      error: "bg-neutral-900 text-red-400 border border-neutral-600",
-      info: "bg-neutral-900 text-neutral-100 border border-neutral-600",
+      success: "bg-neutral-950 text-neutral-200 border border-neutral-700",
+      error: "bg-neutral-950 text-neutral-200 border border-neutral-700",
+      info: "bg-neutral-950 text-neutral-200 border border-neutral-700",
     }),
     []
   );

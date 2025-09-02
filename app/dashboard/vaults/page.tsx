@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback } from "@/components/avatar";
 import { IconArrowDownRight, IconArrowUpRight, IconTrash, IconLayoutGrid, IconLayoutList, IconPlus, IconRefresh, IconShieldCheck, IconAlertTriangle, IconPlugConnected, IconActivity } from "@tabler/icons-react";
@@ -100,6 +100,10 @@ const VaultsPage = () => {
   // Contribute (public) modal state
   const [contributeOpen, setContributeOpen] = useState(false);
 
+  // Throttle/collapse high-cost RPC refreshes to avoid 429s
+  const refreshLockRef = useRef(false);
+  const lastFetchRef = useRef(0);
+
   const REFRESH_DELAY_MS = 10000; // allow cluster/indexers to catch up
 
   const canUseChain = Boolean(address && connection);
@@ -146,6 +150,11 @@ const VaultsPage = () => {
 
   const refreshVaults = useCallback(async () => {
     if (!connection) return;
+    const now = Date.now();
+    if (refreshLockRef.current) return; // drop if a fetch is already running
+    if (now - lastFetchRef.current < 5000) return; // no more than once per 5s
+    refreshLockRef.current = true;
+    let didFetch = false;
     try {
       setEndpoint(connection.rpcEndpoint);
       const programId = PROGRAM_ID;
@@ -164,14 +173,13 @@ const VaultsPage = () => {
         }
       }
 
-      // Only show vaults owned by the connected wallet; if no wallet, show none
+      // Only show vaults owned by the connected wallet; if no wallet, keep previous state
       if (!ownerPk) {
-        setVaults([]);
-        setLastFetchedCount(0);
         return;
       }
 
       const filters = [{ memcmp: { offset: 8 + 32, bytes: ownerPk.toBase58() } }];
+      didFetch = true;
       const accounts = await connection.getProgramAccounts(programId, { filters });
       const myVaults: OnChainVault[] = [];
       for (const acct of accounts) {
@@ -214,7 +222,10 @@ const VaultsPage = () => {
       });
       setLastFetchedCount(myVaults.length);
     } catch (e) {
-      console.log("[Vaults] refreshVaults error", e);
+      // Swallow rate-limit (429) and similar errors silently
+    } finally {
+      if (didFetch) lastFetchRef.current = Date.now();
+      refreshLockRef.current = false;
     }
   }, [connection, address, web3auth]);
 
@@ -233,16 +244,12 @@ const VaultsPage = () => {
         await connection.confirmTransaction(signature, "confirmed");
       }
     } catch (e) {
-      console.log("[Vaults] confirmTransaction error (continuing)", e);
+      // ignore
     }
-    // Multiple passes to cover eventual consistency
+    // A few spaced refreshes; throttling will coalesce duplicate calls
     setTimeout(() => refreshVaults(), 0);
     setTimeout(() => refreshVaults(), 4000);
     setTimeout(() => refreshVaults(), REFRESH_DELAY_MS);
-    // Aggressive repeated refresh for up to ~20s
-    for (let t = 2000; t <= 20000; t += 2000) {
-      setTimeout(() => refreshVaults(), t);
-    }
   }, [connection, refreshVaults]);
 
   const watchAndRefresh = useCallback((pubkeyBase58?: string) => {
@@ -256,7 +263,7 @@ const VaultsPage = () => {
           refreshVaults();
         }, "confirmed");
       } catch (e) {
-        console.log("[Vaults] onAccountChange failed", e);
+        // ignore
       }
     })();
     setTimeout(() => {
@@ -462,7 +469,6 @@ const VaultsPage = () => {
       try {
         const derived = deriveVaultPda(ownerPk, vault.name);
         if (derived.toBase58() !== vault.pubkey) {
-          console.log("[Vaults] close: PDA mismatch for", vault.name, "expected", derived.toBase58(), "got", vault.pubkey);
         }
       } catch {}
       const logSendError = async (error: any) => {
@@ -476,12 +482,10 @@ const VaultsPage = () => {
                 logs = await (error as any).getLogs(connection);
               } catch {}
             }
-            console.log("[Vaults] close getLogs()", logs);
           } else if (error && (error as any).logs) {
-            console.log("[Vaults] close error logs", (error as any).logs);
           }
         } catch (logErr) {
-          console.log("[Vaults] failed to read logs", logErr);
+          
         }
       };
       // First try Anchor method via SolanaWallet
@@ -533,13 +537,10 @@ const VaultsPage = () => {
       }
       // refresh handled above
     } catch (err) {
-      console.log("[Vaults] close error", err);
       try {
         if (err && typeof (err as any).getLogs === "function") {
           const logs = await (err as any).getLogs();
-          console.log("[Vaults] close getLogs() (outer)", logs);
         } else if (err && (err as any).logs) {
-          console.log("[Vaults] close error logs (outer)", (err as any).logs);
         }
       } catch {}
     } finally {
@@ -547,10 +548,10 @@ const VaultsPage = () => {
     }
   }, [address, accounts, connection, signAndSendTransaction, refreshVaults]);
 
+  // initial fetch happens when address & connection are ready
   useEffect(() => {
+    // Always attempt refresh to show cached or previous state; will no-op until connection
     refreshVaults();
-  }, [refreshVaults]);
-  useEffect(() => {
     if (canUseChain) refreshVaults();
   }, [canUseChain, refreshVaults]);
 
@@ -577,7 +578,6 @@ const VaultsPage = () => {
         cache: 'no-store',
       });
       const json = await res.json();
-      console.log('[Vaults] risk/analyze response', json);
       setRiskData(json);
       localStorage.setItem('risk_last_run', String(Date.now()));
       try { localStorage.setItem(cacheKey, JSON.stringify(json)); } catch {}
@@ -731,7 +731,8 @@ const VaultsPage = () => {
                       onClick={() => setCreating(true)}
                       disabled={!canUseChain}
                       title="Create a new vault"
-                      className="transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300"
+                      style={{ fontFamily: '"JetBrains Mono", monospace' }}
+                      className="text-neutral-400 transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300"
                     >
                       <IconPlus className="size-4" />
                       New
@@ -739,10 +740,11 @@ const VaultsPage = () => {
                     <Button
                       size="sm"
                       variant="muted"
-                      onClick={() => refreshVaults()}
+                      onClick={() => { emitToast('Refreshing vaults…', 'info'); refreshVaults(); }}
                       disabled={!connection}
                       title="Refresh vault list"
-                      className="transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300"
+                      style={{ fontFamily: '"JetBrains Mono", monospace' }}
+                      className="text-neutral-400 transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300"
                     >
                       <IconRefresh className="size-4" />
                       Refresh
@@ -753,7 +755,8 @@ const VaultsPage = () => {
                       onClick={analyzeRisk}
                       disabled={!canUseChain || riskLoading || cooldownMs > 0}
                       title={cooldownMs > 0 ? `Wait ${Math.ceil(cooldownMs/1000)}s` : 'Analyze wallet risk'}
-                      className="transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300"
+                      style={{ fontFamily: '"JetBrains Mono", monospace' }}
+                      className="text-neutral-400 transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300"
                     >
                       <IconShieldCheck className="size-4" />
                       {riskLoading ? 'Analyzing…' : cooldownMs > 0 ? `Analyze (${Math.ceil(cooldownMs/1000)}s)` : 'Analyze risk'}
@@ -763,44 +766,14 @@ const VaultsPage = () => {
                       variant="muted"
                       onClick={simulateLockdown}
                       title="Simulate a lockdown state (no network calls)"
-                      className="transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300"
+                      style={{ fontFamily: '"JetBrains Mono", monospace' }}
+                      className="text-neutral-400 transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300"
                     >
                       <IconAlertTriangle className="size-4" />
                       Lockdown
                     </Button>
                    
-                    {/* State representation */}
-                    {(() => {
-                      const state = (riskData?.lock ? 'Lockdown' : 'Calm') as VaultStatus;
-                      const isError = Boolean(riskError);
-                      const isLoading = Boolean(riskLoading);
-                      const pillBase = 'inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full border transition-colors';
-                      const pillClasses = isLoading
-                        ? 'bg-yellow-50 dark:bg-yellow-950/30 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800'
-                        : isError
-                        ? 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800'
-                        : `${statusStyles[state].container} ${statusStyles[state].text} ${statusStyles[state].border}`;
-                      return (
-                        <div className="hidden md:flex items-center gap-2">
-                          <button
-                            className={`${pillBase} ${pillClasses} bg-neutral-900/60 border-neutral-800 text-neutral-300 transition-colors hover:bg-neutral-300 hover:text-neutral-900 hover:border-neutral-300`}
-                            style={{ fontFamily: '"JetBrains Mono", monospace' }}
-                            title={riskError ?? (riskData?.lock ? 'High-risk tokens detected' : 'Stable')}
-                            onClick={() => setRiskOpen(true)}
-                            aria-label="Open risk details"
-                          >
-                            {isError ? (
-                              <IconAlertTriangle className="h-3.5 w-3.5" />
-                            ) : state === 'Lockdown' ? (
-                              <IconAlertTriangle className="h-3.5 w-3.5" />
-                            ) : (
-                              <IconShieldCheck className="h-3.5 w-3.5" />
-                            )}
-                            <span>{isError ? 'Error' : state}</span>
-                          </button>
-                        </div>
-                      );
-                    })()}
+                    
                   </div>
                 </div>
                 <div className="text-sm text-neutral-400" style={{ fontFamily: '"JetBrains Mono", monospace' }}>
@@ -866,7 +839,6 @@ const VaultsPage = () => {
               {view === 'grid' && filteredAndSortedVaults && filteredAndSortedVaults.length > 0 && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                   {filteredAndSortedVaults.map((vault, index) => {
-                    const styles = statusStyles["Calm"];
                     const solAmount = (vault.lamports / LAMPORTS_PER_SOL).toFixed(4);
                     const usdAmount = (Number(solAmount) * 150).toFixed(2);
                     const goalLamports = goals[vault.pubkey] ?? null;
@@ -883,22 +855,18 @@ const VaultsPage = () => {
                         <div className="flex flex-col gap-2">
                           <div className="flex items-center gap-2">
                             <span className="truncate" style={{ fontFamily: '"Bitcount Prop Single", sans-serif' }}>{vault.name}</span>
-                            <span
-                              className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md border bg-neutral-900/60 text-neutral-300 border-neutral-800`}
-                              style={{ fontFamily: '"JetBrains Mono", monospace' }}
-                            >
-                              <span className={`h-1.5 w-1.5 rounded-full ${styles.dot}`} />
-                              Owned
-                            </span>
                           </div>
                           <div className="text-[11px] text-neutral-500 mt-0.5 truncate" style={{ fontFamily: '"JetBrains Mono", monospace' }}>{vault.pubkey}</div>
-                          <div className="text-lg text-neutral-200" style={{ fontFamily: '"Bitcount Prop Single", sans-serif' }}>{solAmount} SOL</div>
-                          <div className="text-[11px] text-neutral-500" style={{ fontFamily: '"Bitcount Prop Single", sans-serif' }}>${usdAmount}</div>
+                          <div className="mt-2 rounded-md border border-neutral-800 bg-neutral-950 p-3">
+                            <div className="text-[11px] text-neutral-400" style={{ fontFamily: '"JetBrains Mono", monospace' }}>Balance</div>
+                            <div className="mt-1 text-lg text-neutral-100" style={{ fontFamily: '"Bitcount Prop Single", sans-serif' }}>{solAmount} SOL</div>
+                            <div className="text-[11px] text-neutral-400" style={{ fontFamily: '"Bitcount Prop Single", sans-serif' }}>${usdAmount}</div>
+                          </div>
                         </div>
                         {progressPct !== null && (
                           <div className="mt-3 h-1.5 w-full bg-neutral-800/70 rounded">
                             <div
-                              className="h-1.5 rounded bg-green-500"
+                              className="h-1.5 rounded bg-neutral-400 dark:bg-neutral-300"
                               style={{ width: `${progressPct}%` }}
                             />
                           </div>
@@ -971,7 +939,6 @@ const VaultsPage = () => {
 
               {/* List view */}
               {view === 'list' && filteredAndSortedVaults && filteredAndSortedVaults.length > 0 && filteredAndSortedVaults.map((vault, index) => {
-                const styles = statusStyles["Calm"];
                 const solAmount = (vault.lamports / LAMPORTS_PER_SOL).toFixed(4);
                 const usdAmount = (Number(solAmount) * 150).toFixed(2);
                 const updatedAgo = `${(index % 5) + 1}h ago`;
@@ -1004,13 +971,6 @@ const VaultsPage = () => {
                         >
                           {vault.name}
                         </span>
-                        <span
-                          className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md border ${styles.container} ${styles.text} ${styles.border}`}
-                          style={{ fontFamily: '"JetBrains Mono", monospace' }}
-                        >
-                          <span className={`h-1.5 w-1.5 rounded-full ${styles.dot}`} />
-                          Owned
-                        </span>
                       </div>
                       <div
                         className="text-[11px] text-neutral-600 dark:text-neutral-400 mt-0.5 line-clamp-1"
@@ -1022,7 +982,7 @@ const VaultsPage = () => {
                       {progressPct !== null && (
                         <div className="mt-1 h-1.5 w-full bg-neutral-200/70 dark:bg-neutral-800/70 rounded">
                           <div
-                            className="h-1.5 rounded bg-green-500"
+                            className="h-1.5 rounded bg-neutral-400 dark:bg-neutral-300"
                             style={{ width: `${progressPct}%` }}
                           />
                         </div>
@@ -1046,18 +1006,21 @@ const VaultsPage = () => {
                       >
                         {changePct > 0 ? '+' : ''}{changePct}%
                       </span>
-                      <span
-                        className="text-lg text-neutral-200"
-                        style={{ fontFamily: '"Bitcount Prop Single", sans-serif' }}
-                      >
-                        {solAmount} SOL
-                      </span>
-                      <span
-                        className="text-[11px] text-neutral-500"
-                        style={{ fontFamily: '"Bitcount Prop Single", monospace' }}
-                      >
-                        ${usdAmount}
-                      </span>
+                      <div className="rounded-md border border-neutral-800 bg-neutral-950 p-2 min-w-[140px] text-right">
+                        <div className="text-[11px] text-neutral-400" style={{ fontFamily: '"JetBrains Mono", monospace' }}>Balance</div>
+                        <div
+                          className="text-lg text-neutral-100"
+                          style={{ fontFamily: '"Bitcount Prop Single", sans-serif' }}
+                        >
+                          {solAmount} SOL
+                        </div>
+                        <div
+                          className="text-[11px] text-neutral-400"
+                          style={{ fontFamily: '"Bitcount Prop Single", monospace' }}
+                        >
+                          ${usdAmount}
+                        </div>
+                      </div>
                       {/* actions (always visible in list view) */}
                       <div className="flex items-center gap-1">
                         <div className="flex items-center gap-1">
